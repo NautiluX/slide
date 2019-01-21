@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPixmap>
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,11 @@ private:
     QLabel *image;
     std::string currentImage;
     void updateImage();
+    int getImageRotation();
+
+    QPixmap getRotatedPixmap(const QPixmap& p);
+    QPixmap getScaledPixmap(const QPixmap& p);
+    void drawBackground(const QPixmap& originalSize, const QPixmap& scaled);
 };
 
 #endif // MAINWINDOW_H

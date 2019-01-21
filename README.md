@@ -7,6 +7,15 @@ Simple slideshow showing random images from specified directory
 slide /path/to/images
 ```
 
+## Dependencies
+
+* libexif
+* qt5
+
+```
+sudo apt install libexif-dev qtdeclarative5-dev-tools
+```
+
 ## Build
 
 ```
