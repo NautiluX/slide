@@ -12,7 +12,7 @@ slide /path/to/images
 ```
 mkdir -p make
 cd make
-qmake ../slide.pro
+qmake ../src/slide.pro
 make
 sudo make install
 ```
