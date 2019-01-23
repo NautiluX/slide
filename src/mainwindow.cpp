@@ -7,11 +7,14 @@
 #include <QGraphicsBlurEffect>
 #include <libexif/exif-data.h>
 #include <iostream>
+#include <QPainter>
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
+#include <sstream>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    image(new QLabel)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
@@ -20,7 +23,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QApplication::setOverrideCursor(Qt::BlankCursor);
     QLabel *label = this->findChild<QLabel*>("image");
     setCentralWidget(label);
-    label->setStyleSheet("QLabel {  background-color: rgba(0, 0, 0, 180);}");
     label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     update();
 
@@ -100,7 +102,12 @@ void MainWindow::updateImage()
     QLabel *label = this->findChild<QLabel*>("image");
     label->setPixmap(scaled);
 
+    std::stringstream style;
+    style << "QLabel {  background-color: rgba(0, 0, 0, " << (255 - backgroundOpacity) << ");}";
+    label->setStyleSheet(style.str().c_str());
+
     drawBackground(rotated, scaled);
+
     update();
 }
 
@@ -122,15 +129,41 @@ void MainWindow::drawBackground(const QPixmap& originalSize, const QPixmap& scal
 {
     QPalette palette;
     if (scaled.width() < width()) {
-        QPixmap background = originalSize.scaledToWidth(width());
+        QPixmap background = blur(originalSize.scaledToWidth(width()));
         QRect rect(0, (background.height() - height())/2, width(), height());
         background = background.copy(rect);
         palette.setBrush(QPalette::Background, background);
     } else {
-        QPixmap background = originalSize.scaledToHeight(height());
+        QPixmap background = blur(originalSize.scaledToHeight(height()));
         QRect rect((background.width() - width())/2, 0, width(), height());
         background = background.copy(rect);
         palette.setBrush(QPalette::Background, background);
     }
     this->setPalette(palette);
+}
+
+QPixmap MainWindow::blur(const QPixmap& input)
+{
+    QGraphicsScene scene;
+    QGraphicsPixmapItem item;
+    item.setPixmap(input);
+    QGraphicsBlurEffect effect;
+    effect.setBlurRadius(blurRadius);
+    item.setGraphicsEffect(&effect);
+    scene.addItem(&item);
+    QImage res(input.size(), QImage::Format_ARGB32);
+    res.fill(Qt::transparent);
+    QPainter ptr(&res);
+    scene.render(&ptr, QRectF(), QRectF( 0, 0, input.width(), input.height()) );
+    return QPixmap::fromImage(res);
+}
+
+void MainWindow::setBlurRadius(unsigned int blurRadius)
+{
+    this->blurRadius = blurRadius;
+}
+
+void MainWindow::setBackgroundOpacity(unsigned int backgroundOpacity)
+{
+    this->backgroundOpacity = backgroundOpacity;
 }

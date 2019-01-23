@@ -20,17 +20,23 @@ public:
     void resizeEvent(QResizeEvent* event);
     ~MainWindow();
     void setImage(std::string path);
+    void setBlurRadius(unsigned int blurRadius);
+    void setBackgroundOpacity(unsigned int opacity);
 
 private:
     Ui::MainWindow *ui;
-    QLabel *image;
+
     std::string currentImage;
+    unsigned int blurRadius = 20;
+    unsigned int backgroundOpacity = 150;
+
     void updateImage();
     int getImageRotation();
 
     QPixmap getRotatedPixmap(const QPixmap& p);
     QPixmap getScaledPixmap(const QPixmap& p);
     void drawBackground(const QPixmap& originalSize, const QPixmap& scaled);
+    QPixmap blur(const QPixmap& input);
 };
 
 #endif // MAINWINDOW_H
