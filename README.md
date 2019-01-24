@@ -1,7 +1,10 @@
 # slide
+
 Simple slideshow showing random images from specified directory.
 Screen background is filled with a scaled version of the image to prevent pure black background.
 
+
+![screenshot](doc/screen.jpg)
 ## Usage
 
 ```
