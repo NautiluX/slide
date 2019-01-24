@@ -1,6 +1,10 @@
 # slide
 
-Simple slideshow showing random images from specified directory.
+Simple, lightweight slideshow selecting random images from specified directory. This slideshow is designed to compile and run also on a Raspberry Pi, for example to turn it into a digital picture frame.
+
+Tested versions: 
+ * Raspberry Pi 3 running Raspbian Stretch.
+
 Screen background is filled with a scaled version of the image to prevent pure black background.
 
 
