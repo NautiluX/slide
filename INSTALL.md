@@ -30,7 +30,7 @@ tar xf slide_<arch>_<version>.tar.gz
 ### OSX
 
 ```
-mv slide_<version>/slide.app/Contents/MacOS/slide /usr/bin/
+mv slide_<version>/slide.app/Contents/MacOS/slide /usr/local/bin/
 ```
 
 ### Linux
