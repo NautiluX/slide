@@ -26,7 +26,7 @@ slide [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p 
 * qt5
 
 ```
-sudo apt install libexif-dev qtdeclarative5-dev-tools
+sudo apt install libexif12 qt5-default
 ```
 
 ## Build
