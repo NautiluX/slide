@@ -4,6 +4,7 @@ Simple, lightweight slideshow selecting random images from specified directory. 
 
 Tested versions: 
  * Raspberry Pi 3 running Raspbian Stretch.
+ * Raspberry Pi 3 running Raspbian Buster.
 
 Screen background is filled with a scaled version of the image to prevent pure black background.
 
