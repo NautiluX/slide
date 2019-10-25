@@ -32,6 +32,12 @@ sudo apt install libexif12 qt5-default
 
 ## Build
 
+dev libs needed to build slide on from source:
+
+```
+sudo apt install libexif-dev
+```
+
 ```
 mkdir -p make
 cd make
