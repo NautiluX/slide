@@ -8,6 +8,7 @@
 #include <libexif/exif-data.h>
 #include <iostream>
 #include <QPainter>
+#include <QTimer>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <sstream>
@@ -19,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 
-    QMainWindow::showFullScreen();
+    QTimer::singleShot(5, this, SLOT(showFullScreen()));
     QApplication::setOverrideCursor(Qt::BlankCursor);
     QLabel *label = this->findChild<QLabel*>("image");
     setCentralWidget(label);
