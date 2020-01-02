@@ -26,11 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
+        imageswitcher.cpp \
     imageselector.cpp
 
 HEADERS += \
         mainwindow.h \
-    imageselector.h
+        imageselector.h \
+    imageswitcher.h
 
 FORMS += \
         mainwindow.ui

@@ -8,18 +8,14 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSelector::ImageSelector(MainWindow& w, unsigned int timeout, std::string path, bool recursive):
-    QObject::QObject(),
-    window(w),
-    timeout(timeout),
+ImageSelector::ImageSelector(std::string path, bool recursive):
     path(path),
-    recursive(recursive),
-    timer(this)
+    recursive(recursive)
 {
     srand (time(NULL));
 }
 
-void ImageSelector::updateImage()
+std::string ImageSelector::getNextImage() const
 {
     QDir directory(path.c_str());
     QStringList images;
@@ -35,22 +31,16 @@ void ImageSelector::updateImage()
     if (images.size() == 0)
     {
       std::cerr << "No jpg images found in folder " << path << std::endl;
-      return;
+      return "";
     }
     unsigned int selectedImage = rand() % images.size();
     std::string filename = directory.filePath(images.at(selectedImage)).toStdString();
     std::cout << "updating image: " << filename << std::endl;
-    window.setImage(filename);
+    return filename;
 }
 
-void ImageSelector::start()
-{
-    updateImage();
-    connect(&timer, SIGNAL(timeout()), this, SLOT(updateImage()));
-    timer.start(timeout);
-}
 
-QStringList ImageSelector::listImagesRecursive()
+QStringList ImageSelector::listImagesRecursive() const
 {
     QDirIterator it(QString(path.c_str()), QStringList() << "*.jpg" << "*.JPG", QDir::Files, QDirIterator::Subdirectories);
     QStringList files;

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "imageselector.h"
+#include "imageswitcher.h"
 #include <QApplication>
 #include <iostream>
 #include <sys/file.h>
@@ -53,7 +54,8 @@ int main(int argc, char *argv[])
     }
     w.show();
 
-    ImageSelector is(w, rotationSeconds * 1000, path, recursive);
-    is.start();
+    ImageSelector selector(path, recursive);
+    ImageSwitcher switcher(w, rotationSeconds * 1000, selector);
+    switcher.start();
     return a.exec();
 }

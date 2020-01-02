@@ -168,3 +168,9 @@ void MainWindow::setBackgroundOpacity(unsigned int backgroundOpacity)
 {
     this->backgroundOpacity = backgroundOpacity;
 }
+
+void MainWindow::warn(std::string text)
+{
+  QLabel *label = this->findChild<QLabel*>("image");
+  label->setText(text.c_str());
+}

@@ -22,6 +22,7 @@ public:
     void setImage(std::string path);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
+    void warn(std::string text);
 
 private:
     Ui::MainWindow *ui;
