@@ -18,25 +18,38 @@ ImageSelector::ImageSelector(std::string path, bool recursive):
 std::string ImageSelector::getNextImage() const
 {
     QDir directory(path.c_str());
-    QStringList images;
-    if (recursive)
+    std:: string filename;
+    try
     {
-      images = listImagesRecursive();
+      if (recursive)
+      {
+        QStringList images = listImagesRecursive();
+        unsigned int selectedImage = selectRandom(images);
+        filename = images.at(selectedImage).toStdString();
+      }
+      else
+      {
+        QStringList images = directory.entryList(QStringList() << "*.jpg" << "*.JPG", QDir::Files);
+        unsigned int selectedImage = selectRandom(images);
+        filename = directory.filePath(images.at(selectedImage)).toStdString();
+      }
     }
-    else
+    catch(const std::string& err) 
     {
-      images = directory.entryList(QStringList() << "*.jpg" << "*.JPG", QDir::Files);
+      std::cerr << "Error: " << err << std::endl;
     }
+    std::cout << "updating image: " << filename << std::endl;
+    return filename;
+}
+
+unsigned int ImageSelector::selectRandom(const QStringList& images) const
+{
     std::cout << "images: " << images.size() << std::endl;
     if (images.size() == 0)
     {
-      std::cerr << "No jpg images found in folder " << path << std::endl;
-      return "";
+      throw std::string("No jpg images found in folder " + path);
     }
-    unsigned int selectedImage = rand() % images.size();
-    std::string filename = directory.filePath(images.at(selectedImage)).toStdString();
-    std::cout << "updating image: " << filename << std::endl;
-    return filename;
+    return rand() % images.size();
 }
 
 

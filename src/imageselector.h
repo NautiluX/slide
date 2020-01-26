@@ -13,6 +13,7 @@ public:
 
 private:
     QStringList listImagesRecursive() const;
+    unsigned int selectRandom(const QStringList& images) const;
     std::string path;
     bool recursive;
 };
