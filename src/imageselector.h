@@ -8,7 +8,7 @@ class MainWindow;
 class ImageSelector
 {
 public:
-    ImageSelector(std::string path, bool recursive);
+    ImageSelector(std::string path, bool recursive, bool shuffle);
     std::string getNextImage() const;
 
 private:
