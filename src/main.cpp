@@ -41,6 +41,10 @@ int main(int argc, char *argv[])
         case 'r':
             recursive = true;
             break;
+        case 's':
+            shuffle = true;
+            std::cout << "Shuffle mode is on." << std::endl;
+            break;
         default: /* '?' */
             usage(argv[0]);
             return 1;
@@ -54,7 +58,7 @@ int main(int argc, char *argv[])
     }
     w.show();
 
-    ImageSelector selector(path, recursive);
+    ImageSelector selector(path, recursive, shuffle);
     ImageSwitcher switcher(w, rotationSeconds * 1000, selector);
     switcher.start();
     return a.exec();
