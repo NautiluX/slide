@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     int opt;
     bool recursive = false;
+    bool shuffle = false;
     while ((opt = getopt(argc, argv, "b:p:t:o:r")) != -1) {
         switch (opt) {
         case 'p':
