@@ -8,7 +8,7 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSelector::ImageSelector(std::string path, bool recursive):
+ImageSelector::ImageSelector(std::string path, bool recursive, bool shuffle):
     path(path),
     recursive(recursive)
 {
