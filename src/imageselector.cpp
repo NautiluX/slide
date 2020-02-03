@@ -9,7 +9,6 @@
 #include <time.h>       /* time */
 #include <algorithm>    // std::shuffle
 #include <random>       // std::default_random_engine
-#include <chrono>       // std::chrono::system_clock
 
 int current_image_shuffle = -1;
 
@@ -35,8 +34,9 @@ std::string ImageSelector::getNextImage() const
             if (current_image_shuffle == -1 or current_image_shuffle == images.size())
             {
                 std::cout << "Shuffling " << images.size() << " images." << std::endl;
-                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count()
-                shuffle (images.begin(), images.end(), std::default_random_engine(seed));   
+		std::random_device rd;
+		std::mt19937 randomizer(rd());
+		std::shuffle(images.begin(), images.end(), randomizer);   
             }
             current_image_shuffle = current_image_shuffle + 1;
             filename = images.at(current_image_shuffle).toStdString();
@@ -55,8 +55,9 @@ std::string ImageSelector::getNextImage() const
             if (current_image_shuffle == -1 or current_image_shuffle == images.size())
             {
                 std::cout << "Shuffling " << images.size() << " images." << std::endl;
-                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count()
-                shuffle (images.begin(), images.end(), std::default_random_engine(seed));   
+		std::random_device rd;
+		std::mt19937 randomizer(rd());
+		std::shuffle(images.begin(), images.end(), randomizer);   
             }
             current_image_shuffle = current_image_shuffle + 1;
             filename = directory.filePath(images.at(current_image_shuffle)).toStdString();

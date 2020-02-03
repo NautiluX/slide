@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     int opt;
     bool recursive = false;
     bool shuffle = false;
-    while ((opt = getopt(argc, argv, "b:p:t:o:r")) != -1) {
+    while ((opt = getopt(argc, argv, "b:p:t:o:r:s")) != -1) {
         switch (opt) {
         case 'p':
             path = optarg;
