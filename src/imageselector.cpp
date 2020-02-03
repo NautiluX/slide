@@ -7,10 +7,16 @@
 #include <iostream>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include <algorithm>    // std::shuffle
+#include <random>       // std::default_random_engine
+#include <chrono>       // std::chrono::system_clock
+
+int current_image_shuffle = -1;
 
 ImageSelector::ImageSelector(std::string path, bool recursive, bool shuffle):
     path(path),
-    recursive(recursive)
+    recursive(recursive),
+    shuffle(shuffle)
 {
     srand (time(NULL));
 }
@@ -24,14 +30,42 @@ std::string ImageSelector::getNextImage() const
       if (recursive)
       {
         QStringList images = listImagesRecursive();
-        unsigned int selectedImage = selectRandom(images);
-        filename = images.at(selectedImage).toStdString();
+        if (shuffle)
+        {
+            if (current_image_shuffle == -1 or current_image_shuffle == images.size())
+            {
+                std::cout << "Shuffling " << images.size() << " images." << std::endl;
+                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count()
+                shuffle (images.begin(), images.end(), std::default_random_engine(seed));   
+            }
+            current_image_shuffle = current_image_shuffle + 1;
+            filename = images.at(current_image_shuffle).toStdString();
+        }
+        else
+        {
+            unsigned int selectedImage = selectRandom(images);
+            filename = images.at(selectedImage).toStdString();
+        }
       }
       else
       {
         QStringList images = directory.entryList(QStringList() << "*.jpg" << "*.JPG", QDir::Files);
-        unsigned int selectedImage = selectRandom(images);
-        filename = directory.filePath(images.at(selectedImage)).toStdString();
+        if (shuffle)
+        {
+            if (current_image_shuffle == -1 or current_image_shuffle == images.size())
+            {
+                std::cout << "Shuffling " << images.size() << " images." << std::endl;
+                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count()
+                shuffle (images.begin(), images.end(), std::default_random_engine(seed));   
+            }
+            current_image_shuffle = current_image_shuffle + 1;
+            filename = directory.filePath(images.at(current_image_shuffle)).toStdString();
+        }
+        else
+        {
+            unsigned int selectedImage = selectRandom(images);
+            filename = directory.filePath(images.at(selectedImage)).toStdString();
+        }
       }
     }
     catch(const std::string& err) 
