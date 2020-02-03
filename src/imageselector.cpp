@@ -11,6 +11,7 @@
 #include <random>       // std::default_random_engine
 
 int current_image_shuffle = -1;
+QStringList images;
 
 ImageSelector::ImageSelector(std::string path, bool recursive, bool shuffle):
     path(path),
@@ -28,12 +29,13 @@ std::string ImageSelector::getNextImage() const
     {
       if (recursive)
       {
-        QStringList images = listImagesRecursive();
         if (shuffle)
         {
             if (current_image_shuffle == -1 or current_image_shuffle == images.size())
             {
-                std::cout << "Shuffling " << images.size() << " images." << std::endl;
+                images = listImagesRecursive();
+		std::cout << "Shuffling " << images.size() << " images." << std::endl;
+		std::srand(std::time(0));
 		std::random_device rd;
 		std::mt19937 randomizer(rd());
 		std::shuffle(images.begin(), images.end(), randomizer);   
@@ -49,12 +51,13 @@ std::string ImageSelector::getNextImage() const
       }
       else
       {
-        QStringList images = directory.entryList(QStringList() << "*.jpg" << "*.JPG", QDir::Files);
         if (shuffle)
         {
-            if (current_image_shuffle == -1 or current_image_shuffle == images.size())
-            {
-                std::cout << "Shuffling " << images.size() << " images." << std::endl;
+	    if (current_image_shuffle == -1 or current_image_shuffle == images.size())
+	    {
+                images = directory.entryList(QStringList() << "*.jpg" << "*.JPG", QDir::Files);
+		std::cout << "Shuffling " << images.size() << " images." << std::endl;
+		std::srand(std::time(0));
 		std::random_device rd;
 		std::mt19937 randomizer(rd());
 		std::shuffle(images.begin(), images.end(), randomizer);   
