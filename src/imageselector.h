@@ -16,6 +16,7 @@ private:
     unsigned int selectRandom(const QStringList& images) const;
     std::string path;
     bool recursive;
+    bool shuffle;
 };
 
 #endif // IMAGESELECTOR_H
