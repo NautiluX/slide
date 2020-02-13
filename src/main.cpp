@@ -26,7 +26,8 @@ int main(int argc, char *argv[])
   MainWindow w;
   int opt;
   bool recursive = false;
-  while ((opt = getopt(argc, argv, "b:p:t:o:r")) != -1) {
+  bool shuffle = false;
+  while ((opt = getopt(argc, argv, "b:p:t:o:rs")) != -1) {
     switch (opt) {
       case 'p':
         path = optarg;
@@ -42,6 +43,10 @@ int main(int argc, char *argv[])
         break;
       case 'r':
         recursive = true;
+        break;
+      case 's':
+        shuffle = true;
+        std::cout << "Shuffle mode is on." << std::endl;
         break;
       default: /* '?' */
         usage(argv[0]);
@@ -60,11 +65,21 @@ int main(int argc, char *argv[])
   if (recursive)
   {
     pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path));
-  } else {
+  }
+  else
+  {
     pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path));
   }
 
-  std::unique_ptr<ImageSelector> selector = std::unique_ptr<ImageSelector>(new DefaultImageSelector(pathTraverser));
+  std::unique_ptr<ImageSelector> selector;
+  if (shuffle)
+  {
+    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
+  }
+  else
+  {
+    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
+  }
 
   w.show();
 

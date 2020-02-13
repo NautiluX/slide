@@ -13,21 +13,33 @@ class ImageSelector
 public:
     ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
     virtual ~ImageSelector();
-    virtual std::string getNextImage() const = 0;
+    virtual std::string getNextImage() = 0;
 
 protected:
     std::unique_ptr<PathTraverser>& pathTraverser;
 };
 
-class DefaultImageSelector : public ImageSelector
+class RandomImageSelector : public ImageSelector
 {
 public:
-    DefaultImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
-    virtual ~DefaultImageSelector();
-    virtual std::string getNextImage() const;
+    RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    virtual ~RandomImageSelector();
+    virtual std::string getNextImage();
 
 private:
     unsigned int selectRandom(const QStringList& images) const;
+};
+
+class ShuffleImageSelector : public ImageSelector
+{
+public:
+    ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    virtual ~ShuffleImageSelector();
+    virtual std::string getNextImage();
+
+private:
+    int current_image_shuffle;
+    QStringList images;
 };
 
 #endif // IMAGESELECTOR_H
