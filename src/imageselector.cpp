@@ -1,4 +1,5 @@
 #include "imageselector.h"
+#include "pathtraverser.h"
 #include "mainwindow.h"
 #include <QDirIterator>
 #include <QTimer>
@@ -8,31 +9,30 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSelector::ImageSelector(std::string path, bool recursive):
-    path(path),
-    recursive(recursive)
+
+ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser):
+    pathTraverser(pathTraverser)
+{
+}
+
+ImageSelector::~ImageSelector(){}
+
+DefaultImageSelector::DefaultImageSelector(std::unique_ptr<PathTraverser>& pathTraverser):
+    ImageSelector(pathTraverser)
 {
     srand (time(NULL));
 }
 
-std::string ImageSelector::getNextImage() const
+DefaultImageSelector::~DefaultImageSelector(){}
+
+std::string DefaultImageSelector::getNextImage() const
 {
-    QDir directory(path.c_str());
     std:: string filename;
     try
     {
-      if (recursive)
-      {
-        QStringList images = listImagesRecursive();
-        unsigned int selectedImage = selectRandom(images);
-        filename = images.at(selectedImage).toStdString();
-      }
-      else
-      {
-        QStringList images = directory.entryList(QStringList() << "*.jpg" << "*.JPG", QDir::Files);
-        unsigned int selectedImage = selectRandom(images);
-        filename = directory.filePath(images.at(selectedImage)).toStdString();
-      }
+      QStringList images = pathTraverser->getImages();
+      unsigned int selectedImage = selectRandom(images);
+      filename = pathTraverser->getImagePath(images.at(selectedImage).toStdString());
     }
     catch(const std::string& err) 
     {
@@ -42,24 +42,12 @@ std::string ImageSelector::getNextImage() const
     return filename;
 }
 
-unsigned int ImageSelector::selectRandom(const QStringList& images) const
+unsigned int DefaultImageSelector::selectRandom(const QStringList& images) const
 {
     std::cout << "images: " << images.size() << std::endl;
     if (images.size() == 0)
     {
-      throw std::string("No jpg images found in folder " + path);
+      throw std::string("No jpg images found in given folder");
     }
     return rand() % images.size();
-}
-
-
-QStringList ImageSelector::listImagesRecursive() const
-{
-    QDirIterator it(QString(path.c_str()), QStringList() << "*.jpg" << "*.JPG", QDir::Files, QDirIterator::Subdirectories);
-    QStringList files;
-    while (it.hasNext())
-    {
-       files.append(it.next());
-    }
-    return files;
 }

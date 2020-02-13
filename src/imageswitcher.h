@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTimer>
 #include <iostream>
+#include <memory>
 
 class MainWindow;
 class ImageSelector;
@@ -11,7 +12,7 @@ class ImageSwitcher : public QObject
 {
     Q_OBJECT
 public:
-    ImageSwitcher(MainWindow& w, unsigned int timeout, const ImageSelector& selector);
+    ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_ptr<ImageSelector>& selector);
     void start();
 
 public slots:
@@ -19,7 +20,7 @@ public slots:
 private:
     MainWindow& window;
     unsigned int timeout;
-    const ImageSelector& selector;
+    std::unique_ptr<ImageSelector>& selector;
     QTimer timer;
 };
 

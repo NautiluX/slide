@@ -4,12 +4,12 @@
 #include <QDirIterator>
 #include <QTimer>
 #include <QApplication>
-#include <QDir>
 #include <iostream>
+#include <memory>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, const ImageSelector& selector):
+ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_ptr<ImageSelector>& selector):
     QObject::QObject(),
     window(w),
     timeout(timeout),
@@ -20,7 +20,7 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, const ImageSel
 
 void ImageSwitcher::updateImage()
 {
-    std::string filename(selector.getNextImage());
+    std::string filename(selector->getNextImage());
     if (filename == "")
     {
       window.warn("No image found.");

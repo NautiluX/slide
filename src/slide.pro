@@ -27,11 +27,13 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         imageswitcher.cpp \
+        pathtraverser.cpp \
     imageselector.cpp
 
 HEADERS += \
         mainwindow.h \
         imageselector.h \
+        pathtraverser.h \
     imageswitcher.h
 
 FORMS += \
