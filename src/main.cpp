@@ -13,7 +13,7 @@
 #include <memory>
 
 void usage(std::string programName) {
-    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder -r" << std::endl;
+    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s]" << std::endl;
 }
 
 int main(int argc, char *argv[])
