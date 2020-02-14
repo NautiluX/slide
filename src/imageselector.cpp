@@ -67,7 +67,7 @@ ShuffleImageSelector::~ShuffleImageSelector()
 
 std::string ShuffleImageSelector::getNextImage()
 {
-  if (images.size() == 0 || current_image_shuffle == images.size())
+  if (images.size() == 0 || current_image_shuffle >= images.size())
   {
     current_image_shuffle = 0;
     images = pathTraverser->getImages();
@@ -81,6 +81,12 @@ std::string ShuffleImageSelector::getNextImage()
     return "";
   }
   std::string filename = pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString());
+  if(!QFileInfo::exists(QString(filename.c_str())))
+  {
+    std::cout << "file not found: " << filename << std::endl;
+    current_image_shuffle = images.size();
+    return getNextImage();
+  }
   std::cout << "updating image: " << filename << std::endl;
   current_image_shuffle = current_image_shuffle + 1;
   return filename;
