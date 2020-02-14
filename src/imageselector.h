@@ -2,20 +2,44 @@
 #define IMAGESELECTOR_H
 
 #include <iostream>
+#include <memory>
 #include <QStringList>
 
 class MainWindow;
+class PathTraverser;
+
 class ImageSelector
 {
 public:
-    ImageSelector(std::string path, bool recursive);
-    std::string getNextImage() const;
+    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    virtual ~ImageSelector();
+    virtual std::string getNextImage() = 0;
+
+protected:
+    std::unique_ptr<PathTraverser>& pathTraverser;
+};
+
+class RandomImageSelector : public ImageSelector
+{
+public:
+    RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    virtual ~RandomImageSelector();
+    virtual std::string getNextImage();
 
 private:
-    QStringList listImagesRecursive() const;
     unsigned int selectRandom(const QStringList& images) const;
-    std::string path;
-    bool recursive;
+};
+
+class ShuffleImageSelector : public ImageSelector
+{
+public:
+    ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    virtual ~ShuffleImageSelector();
+    virtual std::string getNextImage();
+
+private:
+    int current_image_shuffle;
+    QStringList images;
 };
 
 #endif // IMAGESELECTOR_H

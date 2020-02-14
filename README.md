@@ -46,3 +46,16 @@ qmake ../src/slide.pro
 make
 sudo make install
 ```
+
+### macOS
+
+Prerequisite: brew
+
+```
+brew install qt5
+brew install libexif
+mkdir -p build
+cd build
+qmake ../src/slide.pro
+make
+```

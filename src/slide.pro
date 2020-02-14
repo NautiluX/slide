@@ -22,16 +22,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+mac: INCLUDEPATH += $$system(brew --prefix libexif)/include/
+mac: QMAKE_LFLAGS += -L$$system(brew --prefix libexif)/lib
+
+
 
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
         imageswitcher.cpp \
+        pathtraverser.cpp \
     imageselector.cpp
 
 HEADERS += \
         mainwindow.h \
         imageselector.h \
+        pathtraverser.h \
     imageswitcher.h
 
 FORMS += \
