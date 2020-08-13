@@ -42,4 +42,14 @@ private:
     QStringList images;
 };
 
+class SortedImageSelector : public ImageSelector
+{
+public:
+    SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    virtual ~SortedImageSelector();
+    virtual std::string getNextImage();
+
+private:
+    QStringList images;
+};
 #endif // IMAGESELECTOR_H

@@ -19,6 +19,7 @@ slide [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p 
 * `image_folder`: where to search for images (.jpg files)
 * `-r` for recursive traversal of `image_folder`
 * `-s` for shuffle instead of random image rotation
+* `-S` for sorted rotation (files ordered by name, first images then subfolders)
 * `rotation_seconds(default=30)`: time until next random image is chosen from the given folder
 * `background_opacity(default=150)`: opacity of the background filling image between 0 (black background) and 255
 * `blur_radius(default=20)`: blur radius of the background filling image
