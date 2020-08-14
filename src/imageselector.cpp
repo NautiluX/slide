@@ -91,3 +91,52 @@ std::string ShuffleImageSelector::getNextImage()
   current_image_shuffle = current_image_shuffle + 1;
   return filename;
 }
+
+SortedImageSelector::SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser):
+  ImageSelector(pathTraverser),
+  images()
+{
+  srand (time(NULL));
+}
+
+SortedImageSelector::~SortedImageSelector()
+{
+}
+
+bool operator<(const QString& lhs, const QString& rhs) noexcept{
+  if (lhs.count(QLatin1Char('/')) < rhs.count(QLatin1Char('/'))) {
+    return true;
+  }
+  if (lhs.count(QLatin1Char('/')) > rhs.count(QLatin1Char('/'))) {
+    return false;
+  }
+
+  return lhs.toStdString() < rhs.toStdString();
+
+}
+
+std::string SortedImageSelector::getNextImage()
+{
+  if (images.size() == 0)
+  {
+    images = pathTraverser->getImages();
+    std::sort(images.begin(), images.end());
+    std::cout << "read " << images.size() << " images." << std::endl;
+    for (int i = 0;i <images.size();i++){
+      
+        std::cout << images[i].toStdString() << std::endl;
+    }
+  }
+  if (images.size() == 0)
+  {
+    return "";
+  }
+  std::string filename = pathTraverser->getImagePath(images.takeFirst().toStdString());
+  if(!QFileInfo::exists(QString(filename.c_str())))
+  {
+    std::cout << "file not found: " << filename << std::endl;
+    return getNextImage();
+  }
+  std::cout << "updating image: " << filename << std::endl;
+  return filename;
+}
