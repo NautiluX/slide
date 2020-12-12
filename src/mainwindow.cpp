@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QLabel *label = this->findChild<QLabel*>("image");
     setCentralWidget(label);
     label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-    showFullScreen();
     update();
 
 }
