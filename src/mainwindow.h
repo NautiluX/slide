@@ -16,8 +16,9 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    void keyPressEvent(QKeyEvent* event);
-    void resizeEvent(QResizeEvent* event);
+    void keyPressEvent(QKeyEvent* event) override;
+    bool event(QEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
     ~MainWindow();
     void setImage(std::string path);
     void setBlurRadius(unsigned int blurRadius);
