@@ -61,3 +61,16 @@ cd build
 qmake ../src/slide.pro
 make
 ```
+
+## Article on using slides
+
+```
+This article has more helpful ways that you could use this repo as a picture frame
+https://opensource.com/article/19/2/wifi-picture-frame-raspberry-pi
+```
+
+## Removing black border
+
+```
+if you find that you have a black border around your screen you can remove it by disabling overscan. This is done by editing /boot/config.txt and uncommenting disable_overscan=1 
+```
