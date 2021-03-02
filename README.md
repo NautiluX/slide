@@ -10,6 +10,9 @@ Screen background is filled with a scaled version of the image to prevent pure b
 
 
 ![screenshot](doc/screen.jpg)
+
+This project is maintained by myself during my spare time. If you like and use it, consider [buying me a coffee](https://www.buymeacoffee.com/nautilux).
+
 ## Usage
 
 ```
