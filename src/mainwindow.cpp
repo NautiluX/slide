@@ -123,7 +123,7 @@ QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
     int w = width();
     int h = height();
-    return p.scaled(w, h, Qt::KeepAspectRatio);
+    return p.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }
 
 void MainWindow::drawBackground(const QPixmap& originalSize, const QPixmap& scaled)
