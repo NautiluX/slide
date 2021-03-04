@@ -9,6 +9,7 @@ class MainWindow;
 }
 class QLabel;
 class QKeyEvent;
+class Overlay;
 
 class MainWindow : public QMainWindow
 {
@@ -23,6 +24,7 @@ public:
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
+    void setOverlay(Overlay* overlay);
 
 private:
     Ui::MainWindow *ui;
@@ -30,6 +32,10 @@ private:
     std::string currentImage;
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
+
+    Overlay* overlay;
+
+    void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 
     void updateImage();
     int getImageRotation();

@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "overlay.h"
 #include "ui_mainwindow.h"
 #include <QLabel>
 #include <QPixmap>
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <QPainter>
 #include <QTimer>
+#include <QRect>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 #include <sstream>
@@ -99,6 +101,14 @@ void MainWindow::updateImage()
     QPixmap p( currentImage.c_str() );
     QPixmap rotated = getRotatedPixmap(p);
     QPixmap scaled = getScaledPixmap(rotated);
+    
+    if (overlay != NULL)
+    {
+      drawText(scaled, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage).c_str(), Qt::AlignTop|Qt::AlignLeft);
+      drawText(scaled, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage).c_str(), Qt::AlignTop|Qt::AlignRight);
+      drawText(scaled, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage).c_str(), Qt::AlignBottom|Qt::AlignLeft);
+      drawText(scaled, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage).c_str(), Qt::AlignBottom|Qt::AlignRight);
+    }
 
     QLabel *label = this->findChild<QLabel*>("image");
     label->setPixmap(scaled);
@@ -110,6 +120,24 @@ void MainWindow::updateImage()
     drawBackground(rotated, scaled);
 
     update();
+}
+
+void MainWindow::drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment) {
+  //std::cout << "text: " << text.toStdString()  << " margin: " << margin << " fontsize: " << fontsize<< std::endl;
+  QPainter pt(&image);
+  pt.setPen(QPen(Qt::white));
+  pt.setFont(QFont("Sans", fontsize, QFont::Bold));
+  QRect marginRect = image.rect().adjusted(
+      margin,
+      margin,
+      margin*-1,
+      margin*-1);
+  pt.drawText(marginRect, alignment, text);
+}
+
+void MainWindow::setOverlay(Overlay* o)
+{
+  overlay = o;
 }
 
 QPixmap MainWindow::getRotatedPixmap(const QPixmap& p)

@@ -2,6 +2,7 @@
 #include "imageselector.h"
 #include "imageswitcher.h"
 #include "pathtraverser.h"
+#include "overlay.h"
 #include <QApplication>
 #include <iostream>
 #include <sys/file.h>
@@ -28,7 +29,8 @@ int main(int argc, char *argv[])
   bool recursive = false;
   bool shuffle = false;
   bool sorted = false;
-  while ((opt = getopt(argc, argv, "b:p:t:o:rsS")) != -1) {
+  std::string overlay = "";
+  while ((opt = getopt(argc, argv, "b:p:t:o:O:rsS")) != -1) {
     switch (opt) {
       case 'p':
         path = optarg;
@@ -51,6 +53,9 @@ int main(int argc, char *argv[])
         break;
       case 'S':
         sorted = true;
+        break;
+      case 'O':
+        overlay = optarg;
         break;
       default: /* '?' */
         usage(argv[0]);
@@ -88,7 +93,9 @@ int main(int argc, char *argv[])
   {
     selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
   }
-
+  std::cout << "Overlay input: " << overlay << std::endl;
+  Overlay o(overlay);
+  w.setOverlay(&o);
   w.show();
 
   ImageSwitcher switcher(w, rotationSeconds * 1000, selector);

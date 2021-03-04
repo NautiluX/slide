@@ -32,12 +32,14 @@ SOURCES += \
         mainwindow.cpp \
         imageswitcher.cpp \
         pathtraverser.cpp \
+        overlay.cpp \
     imageselector.cpp
 
 HEADERS += \
         mainwindow.h \
         imageselector.h \
         pathtraverser.h \
+        overlay.h \
     imageswitcher.h
 
 FORMS += \
