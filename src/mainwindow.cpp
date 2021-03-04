@@ -10,6 +10,7 @@
 #include <iostream>
 #include <QPainter>
 #include <QTimer>
+#include <QPropertyAnimation>
 #include <QRect>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
@@ -49,13 +50,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
    QMainWindow::resizeEvent(event);
-    updateImage();
+   updateImage(true);
 }
 
 void MainWindow::setImage(std::string path)
 {
     currentImage = path;
-    updateImage();
+    updateImage(false);
 }
 
 int MainWindow::getImageRotation()
@@ -93,31 +94,47 @@ int MainWindow::getImageRotation()
     return degrees;
 }
 
-void MainWindow::updateImage()
+void MainWindow::updateImage(bool immediately)
 {
     if (currentImage == "")
-        return;
+      return;
+
+    QLabel *label = this->findChild<QLabel*>("image");
+    const QPixmap* oldImage = label->pixmap();
+    if (oldImage != NULL && !immediately)
+    {
+      QPalette palette;
+      palette.setBrush(QPalette::Background, *oldImage);
+      this->setPalette(palette);
+    }
 
     QPixmap p( currentImage.c_str() );
     QPixmap rotated = getRotatedPixmap(p);
     QPixmap scaled = getScaledPixmap(rotated);
+    QPixmap background = getBlurredBackground(rotated, scaled);
+    drawForeground(background, scaled);
     
     if (overlay != NULL)
     {
-      drawText(scaled, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage).c_str(), Qt::AlignTop|Qt::AlignLeft);
-      drawText(scaled, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage).c_str(), Qt::AlignTop|Qt::AlignRight);
-      drawText(scaled, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage).c_str(), Qt::AlignBottom|Qt::AlignLeft);
-      drawText(scaled, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage).c_str(), Qt::AlignBottom|Qt::AlignRight);
+      drawText(background, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage).c_str(), Qt::AlignTop|Qt::AlignLeft);
+      drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage).c_str(), Qt::AlignTop|Qt::AlignRight);
+      drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage).c_str(), Qt::AlignBottom|Qt::AlignLeft);
+      drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage).c_str(), Qt::AlignBottom|Qt::AlignRight);
     }
 
-    QLabel *label = this->findChild<QLabel*>("image");
-    label->setPixmap(scaled);
+    label->setPixmap(background);
 
-    std::stringstream style;
-    style << "QLabel {  background-color: rgba(0, 0, 0, " << (255 - backgroundOpacity) << ");}";
-    label->setStyleSheet(style.str().c_str());
-
-    drawBackground(rotated, scaled);
+    if (oldImage != NULL && !immediately)
+    {
+      auto effect = new QGraphicsOpacityEffect(label);
+      effect->setOpacity(0.0);
+      label->setGraphicsEffect(effect);
+      QPropertyAnimation* animation = new QPropertyAnimation(effect, "opacity");
+      animation->setDuration(1000);
+      animation->setStartValue(0);
+      animation->setEndValue(1);
+      animation->start(QAbstractAnimation::DeleteWhenStopped);
+    }
 
     update();
 }
@@ -135,9 +152,29 @@ void MainWindow::drawText(QPixmap& image, int margin, int fontsize, QString text
   pt.drawText(marginRect, alignment, text);
 }
 
+void MainWindow::drawForeground(QPixmap& background, const QPixmap& foreground) {
+    QPainter pt(&background);
+    QBrush brush(QColor(0, 0, 0, 255-backgroundOpacity));
+    pt.fillRect(0,0,background.width(), background.height(), brush);
+    pt.drawPixmap((background.width()-foreground.width())/2, (background.height()-foreground.height())/2, foreground);
+}
+
 void MainWindow::setOverlay(Overlay* o)
 {
   overlay = o;
+}
+
+QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
+{
+    if (scaled.width() < width()) {
+      QPixmap background = blur(originalSize.scaledToWidth(width(), Qt::SmoothTransformation));
+      QRect rect(0, (background.height() - height())/2, width(), height());
+      return background.copy(rect);
+    } else {
+      QPixmap background = blur(originalSize.scaledToHeight(height(), Qt::SmoothTransformation));
+      QRect rect((background.width() - width())/2, 0, width(), height());
+      return background.copy(rect);
+    }
 }
 
 QPixmap MainWindow::getRotatedPixmap(const QPixmap& p)
@@ -158,8 +195,8 @@ void MainWindow::drawBackground(const QPixmap& originalSize, const QPixmap& scal
 {
     QPalette palette;
     if (scaled.width() < width()) {
-        QPixmap background = blur(originalSize.scaledToWidth(width()));
-        QRect rect(0, (background.height() - height())/2, width(), height());
+        QPixmap background = blur(originalSize.scaledToHeight(height()));
+        QRect rect((background.width() - width())/2, 0, width(), height());
         background = background.copy(rect);
         palette.setBrush(QPalette::Background, background);
     } else {

@@ -37,12 +37,14 @@ private:
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 
-    void updateImage();
+    void updateImage(bool immediately);
     int getImageRotation();
 
+    QPixmap getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled);
     QPixmap getRotatedPixmap(const QPixmap& p);
     QPixmap getScaledPixmap(const QPixmap& p);
     void drawBackground(const QPixmap& originalSize, const QPixmap& scaled);
+    void drawForeground(QPixmap& background, const QPixmap& foreground);
     QPixmap blur(const QPixmap& input);
 };
 
