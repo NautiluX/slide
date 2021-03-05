@@ -6,6 +6,7 @@
 #include <QDate>
 #include <QLocale>
 #include <QTime>
+#include <QFileInfo>
 #include <QStringList>
 #include <QRegExp>
 #include <iostream>
@@ -117,9 +118,33 @@ std::string Overlay::renderString(QString overlayTemplate, std::string filename)
   result.replace("<datetime>", QLocale::system().toString(QDateTime::currentDateTime()));
   result.replace("<date>", QLocale::system().toString(QDate::currentDate()));
   result.replace("<time>", QTime::currentTime().toString("hh:mm"));
-  result.replace("<filename>", filename.c_str());
+  result.replace("<dir>", getDir(filename));
+  result.replace("<path>", getPath(filename));
+  result.replace("<filepath>", filename.c_str());
+  result.replace("<filename>", getFilename(filename));
+  result.replace("<basename>", getBasename(filename));
   result.replace("<exifdatetime>", getExifDate(filename));
   return result.toStdString();
+}
+
+QString Overlay::getFilename(std::string filename) {
+  QFileInfo fileInfo(filename.c_str());
+  return fileInfo.fileName();
+}
+
+QString Overlay::getBasename(std::string filename) {
+  QFileInfo fileInfo(filename.c_str());
+  return fileInfo.baseName();
+}
+
+QString Overlay::getDir(std::string filename) {
+  QFileInfo fileInfo(filename.c_str());
+  return fileInfo.dir().dirName();
+}
+
+QString Overlay::getPath(std::string filename) {
+  QFileInfo fileInfo(filename.c_str());
+  return fileInfo.path();
 }
 
 QString Overlay::getExifDate(std::string filename) {

@@ -11,5 +11,5 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 cd $DIR/..
 rsync -av --delete $(pwd)/* $USER@$HOSTNAME:/tmp/slide_build
-ssh $USER@$HOSTNAME "/tmp/slide_build/sbin/package.sh $ARCH $VERSION"
+ssh $USER@$HOSTNAME "rm -rf /tmp/slide_build/build;/tmp/slide_build/sbin/package.sh $ARCH $VERSION"
 scp $USER@$HOSTNAME:/tmp/slide_build/make/slide_*.tar.gz .
