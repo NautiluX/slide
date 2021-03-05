@@ -34,8 +34,12 @@ slide [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p 
     * `<time>` current time
     * `<date>` current date
     * `<datetime>` current time and date
-    * `<filename>` filename of the current image
     * `<exifdatetime>` time stamp from the EXIF data of the image
+    * `<filename>` filename of the current image
+    * `<basename>` basename of the current image (without suffix)
+    * `<filepath>` filename including the path of the current image
+    * `<dir>`directory of the current image
+    * `<path>`path to the current image without filename
   * Example: `slide -p ./images -O "20|60|Time: <time>;;;Picture taken at <exifdatetime>"`
       
 ## Dependencies
