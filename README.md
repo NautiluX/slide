@@ -46,9 +46,10 @@ slide [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p 
 
 * libexif
 * qt5
-
+* qt5-image-formats-plugins for tiff
 ```
 sudo apt install libexif12 qt5-default
+sudo apt install qt5-image-formats-plugins
 ```
 
 ## Build
