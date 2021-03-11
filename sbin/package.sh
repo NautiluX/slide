@@ -2,8 +2,8 @@
 
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ARCH=$1
-VERSION=$2
+export ARCH=$1
+export VERSION=$2
 
 set -euo pipefail
 
@@ -22,11 +22,8 @@ if [[ "$ARCH" == "osx" ]]; then
 fi
 
 cd "$DIR/.."
-mkdir -p make/slide_$VERSION
-cd make
-qmake ../src/slide.pro
-make
-cp -r "$BINARY" "slide_$VERSION/"
-cp "../INSTALL.md" "slide_$VERSION/"
-cp "../LICENSE" "slide_$VERSION/"
-tar cfz slide_${ARCH}_$VERSION.tar.gz "slide_$VERSION"
+if ! make check-deps-deb; then
+  sudo make install-deps-deb
+fi
+
+make package

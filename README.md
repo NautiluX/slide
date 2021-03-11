@@ -5,6 +5,7 @@ Simple, lightweight slideshow selecting random images from specified directory. 
 Tested versions: 
  * Raspberry Pi 3 running Raspbian Stretch.
  * Raspberry Pi 3 running Raspbian Buster.
+ * Raspberry Pi Zero running Raspbian Buster.
 
 Screen background is filled with a scaled version of the image to prevent pure black background.
 
@@ -44,26 +45,34 @@ slide [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p 
       
 ## Dependencies
 
-* libexif
+* qt5-qmake
 * qt5
+* qt5-image-formats-plugins
+* libexif
+
+Ubuntu/Raspbian:
 
 ```
-sudo apt install libexif12 qt5-default
+sudo make install-deps-deb
 ```
 
 ## Build
 
-dev libs needed to build slide on from source:
+Install dependencies
 
 ```
-sudo apt install libexif-dev
+make install-deps-deb
 ```
 
+Build project
+
 ```
-mkdir -p make
-cd make
-qmake ../src/slide.pro
 make
+```
+
+Install binaries
+
+```
 sudo make install
 ```
 
@@ -74,9 +83,7 @@ Prerequisite: brew
 ```
 brew install qt5
 brew install libexif
-mkdir -p build
-cd build
-qmake ../src/slide.pro
+brew install libexif
 make
 ```
 
@@ -87,7 +94,7 @@ This article has more helpful ways that you could use this repo as a picture fra
 https://opensource.com/article/19/2/wifi-picture-frame-raspberry-pi
 ```
 
-## Removing black border
+## Removing black border (Raspberry Pi)
 
 ```
 if you find that you have a black border around your screen you can remove it by disabling overscan. This is done by editing /boot/config.txt and uncommenting disable_overscan=1 

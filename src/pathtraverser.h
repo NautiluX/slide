@@ -16,6 +16,7 @@ class PathTraverser
 
   protected:
     const std::string path;
+    QStringList getImageFormats() const;
 };
 
 class RecursivePathTraverser : public PathTraverser
