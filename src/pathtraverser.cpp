@@ -13,6 +13,14 @@ PathTraverser::PathTraverser(const std::string path):
 
 PathTraverser::~PathTraverser() {}
 
+QStringList PathTraverser::getImageFormats() const {
+  QStringList imageFormats;
+  imageFormats << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG";
+  imageFormats << "*.PNG" << "*.png";
+  imageFormats << "*.tiff" << "*.TIFF" << "*.tif" << "*.TIF";
+  return imageFormats;
+}
+
 RecursivePathTraverser::RecursivePathTraverser(const std::string path):
   PathTraverser(path)
 {}
@@ -22,8 +30,7 @@ RecursivePathTraverser::~RecursivePathTraverser() {}
 
 QStringList RecursivePathTraverser::getImages() const
 {
-    QDirIterator it(QString(path.c_str()),
-                    QStringList() << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG" << "*.PNG" << "*.png" << "*.tiff" << "*.TIFF" << "*.tif" << "*.TIF",
+    QDirIterator it(QString(path.c_str()), getImageFormats(),
                     QDir::Files, QDirIterator::Subdirectories);
     QStringList files;
     while (it.hasNext())
@@ -48,8 +55,7 @@ DefaultPathTraverser::~DefaultPathTraverser() {}
 
 QStringList DefaultPathTraverser::getImages() const
 {
-  return directory.entryList(QStringList() << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG" << "*.PNG" << "*.png"<< "*.tiff" << "*.TIFF"<< "*.tif" << "*.TIF",
-                             QDir::Files);
+  return directory.entryList(getImageFormats(), QDir::Files);
 }
 
 const std::string DefaultPathTraverser::getImagePath(const std::string image) const
