@@ -15,9 +15,8 @@ PathTraverser::~PathTraverser() {}
 
 QStringList PathTraverser::getImageFormats() const {
   QStringList imageFormats;
-  imageFormats << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG";
-  imageFormats << "*.PNG" << "*.png";
-  imageFormats << "*.tiff" << "*.TIFF" << "*.tif" << "*.TIF";
+  for ( const QString& s : supportedFormats )
+      imageFormats<<"*."+s<<"*."+s.toUpper();
   return imageFormats;
 }
 

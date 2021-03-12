@@ -5,6 +5,8 @@
 #include <QDir>
 #include <QStringList>
 
+static const QStringList supportedFormats={"jpg","jpeg","png","tif","tiff"};
+
 class MainWindow;
 class PathTraverser
 {
