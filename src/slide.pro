@@ -28,6 +28,7 @@ mac: QMAKE_LFLAGS += -L$$system(brew --prefix libexif)/lib
 
 
 SOURCES += \
+    exifhelper.cpp \
         main.cpp \
         mainwindow.cpp \
         imageswitcher.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
     imageselector.cpp
 
 HEADERS += \
+    exifhelper.h \
         mainwindow.h \
         imageselector.h \
         pathtraverser.h \
