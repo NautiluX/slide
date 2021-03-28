@@ -7,7 +7,7 @@ all: build
 
 .PHONY: install-deps-deb
 install-deps-deb:
-	apt install qt5-qmake libexif12 qt5-default libexif-dev qt5-image-formats-plugins
+	apt install qt5-qmake libexif12 qt5-default libexif-dev qt5-image-formats-plugins libheif1 libheif-dev cmake
 
 check-deps-deb:
 	dpkg -l | grep qt5-qmake
@@ -15,6 +15,9 @@ check-deps-deb:
 	dpkg -l | grep libexif-dev
 	dpkg -l | grep qt5-default
 	dpkg -l | grep qt5-image-formats-plugins
+	dpkg -l | grep libheif1
+	dpkg -l | grep libheif-dev
+	dpkg -l | grep cmake
 
 .PHONY: clean
 clean:

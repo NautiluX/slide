@@ -2,9 +2,14 @@
 #include <QVariant>
 #include <QDateTime>
 #include <QLocale>
+#include <QFileInfo>
+#include <stdlib.h>
+#include <iostream>
+#include <libheif/heif_cxx.h>
 
 ExifHelper::ExifHelper():
-    m_haveExifData(false)
+    m_exifData(NULL),
+    m_isHeif(false)
 {
 
 }
@@ -15,15 +20,20 @@ ExifHelper::~ExifHelper(){
 
 void ExifHelper::setImage(const std::string path){
     m_path=path.c_str();
-    if(m_haveExifData){
+    if(m_exifData){
         exif_data_free(m_exifData);
     }
-    m_exifData=exif_data_new_from_file(path.c_str());
+    if(isHeif(path)){
+        m_exifData=getExifDataFromHeif(path);
+        m_isHeif=true;
+    }else{
+        m_exifData=exif_data_new_from_file(path.c_str());
+        m_isHeif=false;
+    }
+
     if(m_exifData){
-        m_haveExifData=true;
         m_byteOrder=exif_data_get_byte_order(m_exifData);
     }
-    else m_haveExifData=false;
 }
 
 ExifData *ExifHelper::getExifData(){
@@ -32,6 +42,7 @@ ExifData *ExifHelper::getExifData(){
 
 int ExifHelper::getImageRotation()
 {
+    if(m_isHeif) return 0; //if not, heic image will be rotated 2 times, courtesy of libheif?
     int orientation = 0;
     if (m_exifData)
     {
@@ -40,6 +51,7 @@ int ExifHelper::getImageRotation()
         if (exifEntry)
         {
             orientation = exif_get_short(exifEntry->data, m_byteOrder);
+           // std::cout << m_path.toStdString() << " orientation " << orientation<< "\n";
         }
     }
 
@@ -215,4 +227,23 @@ double ExifHelper::getExifGeoCooValue(const unsigned char *e, ExifByteOrder o){
             getExifRationalValue(e+sizeof(ExifRational),o)/60+
             getExifRationalValue(e+2*sizeof(ExifRational),o)/3600
             );
+}
+
+bool ExifHelper::isHeif(const std::string path){
+    //TODO use libheif method heif_check_filetype(), as soon as raspi has libheif version =>1.4
+    QFileInfo fileInfo(path.c_str());
+    if(fileInfo.suffix().toLower()=="heic") return true;
+    return false;
+}
+
+ExifData* ExifHelper::getExifDataFromHeif(const std::string path){
+     heif::Context ctx;
+     ctx.read_from_file(path);
+     heif::ImageHandle handle(ctx.get_primary_image_handle());
+     std::vector<heif_item_id> ids(handle.get_list_of_metadata_block_IDs("Exif"));
+     if(ids.empty()) return NULL;
+     std::vector<uint8_t> data(handle.get_metadata(ids[0]));
+     const unsigned char *p(&data[4]); //first 4 bytes apparently offset to tiff data
+     ExifData *ptr(exif_data_new_from_data(p,data.size()-4));
+    return ptr;
 }

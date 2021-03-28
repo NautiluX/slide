@@ -51,3 +51,5 @@ target.path = /usr/local/bin/
 INSTALLS += target
 
 unix|win32: LIBS += -lexif
+
+unix|win32: LIBS += -lheif

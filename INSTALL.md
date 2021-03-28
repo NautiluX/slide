@@ -6,6 +6,7 @@ This project depends on the following dynamically linked libraries:
 
 * qt5
 * libexif
+* libheif
 
 ### OSX
 

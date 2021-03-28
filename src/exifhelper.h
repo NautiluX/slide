@@ -24,15 +24,17 @@ public:
     const QString getExifCamera();
 
 private:
+    bool isHeif(const std::string path);
+    ExifData * getExifDataFromHeif(const std::string path);
     const QString getExifAscii(ExifEntry *e);
     double getExifRationalValue(const unsigned char *e, ExifByteOrder o);
     double getExifGeoCooValue(const unsigned char *e, ExifByteOrder o);
 
     ExifData *m_exifData;
+    bool m_isHeif;
     ExifByteOrder m_byteOrder;
     QString m_path;
 
-    bool m_haveExifData;
 };
 
 #endif // EXIFHELPER_H

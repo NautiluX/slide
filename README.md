@@ -50,6 +50,11 @@ slide [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p 
 * qt5-image-formats-plugins
 * libexif
 
+## if *.heic support wanted
+* libheif
+* qt-heif-image-plugin (alas is not a part of Qt jet, have to be compiled, see instuctions below) 
+* cmake
+
 Ubuntu/Raspbian:
 
 ```
@@ -75,6 +80,18 @@ Install binaries
 ```
 sudo make install
 ```
+Build Qt plugin for *.heic (Iphone) files
+
+```
+git clone https://github.com/jakar/qt-heif-image-plugin.git
+cd qt-heif-image-plugin
+mkdir -p build
+cd build
+cmake ..
+make
+sudo make install
+```
+
 
 ### macOS
 
