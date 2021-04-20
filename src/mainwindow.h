@@ -10,6 +10,7 @@ class MainWindow;
 class QLabel;
 class QKeyEvent;
 class Overlay;
+class ExifHelper;
 
 class MainWindow : public QMainWindow
 {
@@ -38,7 +39,6 @@ private:
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 
     void updateImage(bool immediately);
-    int getImageRotation();
 
     QPixmap getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled);
     QPixmap getRotatedPixmap(const QPixmap& p);
@@ -46,6 +46,8 @@ private:
     void drawBackground(const QPixmap& originalSize, const QPixmap& scaled);
     void drawForeground(QPixmap& background, const QPixmap& foreground);
     QPixmap blur(const QPixmap& input);
+
+    ExifHelper *m_exifHelper;
 };
 
 #endif // MAINWINDOW_H

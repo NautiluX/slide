@@ -39,13 +39,13 @@ std::string RandomImageSelector::getNextImage()
   {
     std::cerr << "Error: " << err << std::endl;
   }
-  std::cout << "updating image: " << filename << std::endl;
+  //std::cout << "updating image: " << filename << std::endl;
   return filename;
 }
 
 unsigned int RandomImageSelector::selectRandom(const QStringList& images) const
 {
-  std::cout << "images: " << images.size() << std::endl;
+  //std::cout << "images: " << images.size() << std::endl;
   if (images.size() == 0)
   {
     throw std::string("No jpg images found in given folder");
@@ -87,7 +87,7 @@ std::string ShuffleImageSelector::getNextImage()
     current_image_shuffle = images.size();
     return getNextImage();
   }
-  std::cout << "updating image: " << filename << std::endl;
+  //std::cout << "updating image: " << filename << std::endl;
   current_image_shuffle = current_image_shuffle + 1;
   return filename;
 }
@@ -122,10 +122,10 @@ std::string SortedImageSelector::getNextImage()
     images = pathTraverser->getImages();
     std::sort(images.begin(), images.end());
     std::cout << "read " << images.size() << " images." << std::endl;
-    for (int i = 0;i <images.size();i++){
+//    for (int i = 0;i <images.size();i++){
       
-        std::cout << images[i].toStdString() << std::endl;
-    }
+//        std::cout << images[i].toStdString() << std::endl;
+//    }
   }
   if (images.size() == 0)
   {
@@ -137,6 +137,6 @@ std::string SortedImageSelector::getNextImage()
     std::cout << "file not found: " << filename << std::endl;
     return getNextImage();
   }
-  std::cout << "updating image: " << filename << std::endl;
+//  std::cout << "updating image: " << filename << std::endl;
   return filename;
 }

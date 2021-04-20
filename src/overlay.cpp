@@ -1,7 +1,7 @@
 #include "overlay.h"
+#include "exifhelper.h"
 #include <QString>
 #include <QDateTime>
-#include <libexif/exif-data.h>
 #include <unistd.h>
 #include <QDate>
 #include <QLocale>
@@ -123,7 +123,9 @@ std::string Overlay::renderString(QString overlayTemplate, std::string filename)
   result.replace("<filepath>", filename.c_str());
   result.replace("<filename>", getFilename(filename));
   result.replace("<basename>", getBasename(filename));
-  result.replace("<exifdatetime>", getExifDate(filename));
+  result.replace("<exifdatetime>", m_eh->getExifDate());
+  result.replace("<exifGPS>", m_eh->getExifGPS());
+  result.replace("<exifcamera>", m_eh->getExifCamera());
   return result.toStdString();
 }
 
@@ -147,23 +149,6 @@ QString Overlay::getPath(std::string filename) {
   return fileInfo.path();
 }
 
-QString Overlay::getExifDate(std::string filename) {
-
-  QString dateTime;
-  ExifData *exifData = exif_data_new_from_file(filename.c_str());
-  if (exifData)
-  {
-    ExifEntry *exifEntry = exif_data_get_entry(exifData, EXIF_TAG_DATE_TIME_ORIGINAL);
-
-    if (exifEntry)
-    {
-      char buf[2048];
-      dateTime = exif_entry_get_value(exifEntry, buf, sizeof(buf));
-    }
-    exif_data_free(exifData);
-    QString exifDateFormat = "yyyy:MM:dd hh:mm:ss";
-    QDateTime exifDateTime = QDateTime::fromString(dateTime, exifDateFormat);
-    return QLocale::system().toString(exifDateTime);
-  }
-  return dateTime;
+void Overlay::setExifHelper(ExifHelper *eh){
+    m_eh=eh;
 }

@@ -8,6 +8,8 @@
 #include <QStringList>
 
 class MainWindow;
+class ExifHelper;
+
 class Overlay
 {
   public:
@@ -26,6 +28,8 @@ class Overlay
     int getFontsizeBottomLeft();
     int getMarginBottomRight();
     int getFontsizeBottomRight();
+
+    void setExifHelper(ExifHelper *eh);
 
 
   private:
@@ -53,12 +57,13 @@ class Overlay
     int getFontsize(QStringList components);
     QString getTemplate(QStringList components);
 
-    QString getExifDate(std::string filename);
     QString getDir(std::string filename);
     QString getPath(std::string filename);
     QString getFilename(std::string filename);
     QString getBasename(std::string filename);
     void parseInput();
     std::string renderString(QString overlayTemplate, std::string filename);
+
+    ExifHelper *m_eh;
 };
 #endif
