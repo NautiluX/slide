@@ -29,11 +29,21 @@ int main(int argc, char *argv[])
   bool recursive = false;
   bool shuffle = false;
   bool sorted = false;
+  char aspect = 'a';
+  std::string valid_aspects = "alp"; // all, landscape, portait
   std::string overlay = "";
-  while ((opt = getopt(argc, argv, "b:p:t:o:O:rsS")) != -1) {
+  while ((opt = getopt(argc, argv, "b:p:t:o:O:a:rsS")) != -1) {
     switch (opt) {
       case 'p':
         path = optarg;
+        break;
+      case 'a':
+        aspect = optarg[0];
+        if ( valid_aspects.find(aspect) == std::string::npos )
+        {
+          std::cout << "Invalid Aspect option, defaulting to all" << std::endl;
+          aspect = 'a';
+        }
         break;
       case 't':
         rotationSeconds = atoi(optarg);
@@ -83,16 +93,17 @@ int main(int argc, char *argv[])
   std::unique_ptr<ImageSelector> selector;
   if (sorted)
   {
-    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
+    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser, aspect));
   }
   else if (shuffle)
   {
-    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
+    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser, aspect));
   }
   else
   {
-    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
+    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser, aspect));
   }
+  std::cout << "Rotation Time: " << rotationSeconds << std::endl;
   std::cout << "Overlay input: " << overlay << std::endl;
   Overlay o(overlay);
   w.setOverlay(&o);

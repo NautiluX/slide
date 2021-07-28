@@ -11,18 +11,21 @@ class PathTraverser;
 class ImageSelector
 {
 public:
-    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect);
     virtual ~ImageSelector();
     virtual std::string getNextImage() = 0;
 
 protected:
+    int getImageRotation(const std::string &fileName);
+    bool imageValidForAspect(const std::string &fileName);
     std::unique_ptr<PathTraverser>& pathTraverser;
+    char _aspect;
 };
 
 class RandomImageSelector : public ImageSelector
 {
 public:
-    RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect);
     virtual ~RandomImageSelector();
     virtual std::string getNextImage();
 
@@ -33,7 +36,7 @@ private:
 class ShuffleImageSelector : public ImageSelector
 {
 public:
-    ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect);
     virtual ~ShuffleImageSelector();
     virtual std::string getNextImage();
 
@@ -45,7 +48,7 @@ private:
 class SortedImageSelector : public ImageSelector
 {
 public:
-    SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect);
     virtual ~SortedImageSelector();
     virtual std::string getNextImage();
 
