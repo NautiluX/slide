@@ -20,7 +20,7 @@ check-deps-deb:
 clean:
 	rm -rf build
 
-build:
+build: $(shell find src -type f)
 	mkdir -p build
 	qmake src/slide.pro -o build/Makefile
 	make -C build
