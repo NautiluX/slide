@@ -50,7 +50,10 @@ void Overlay::parseInput() {
 
 QString Overlay::getTemplate(QStringList components){
   if (components.size()>3) {
-    std::cout << "template: " << components[3].toStdString() << std::endl;
+    if(_debugMode)
+    {
+      std::cout << "template: " << components[3].toStdString() << std::endl;
+    }
     return components[3];
   }
   return "";
@@ -58,7 +61,10 @@ QString Overlay::getTemplate(QStringList components){
 
 int Overlay::getMargin(QStringList components){
   if (components.size()>1) {
-    std::cout << "margin: " << components[1].toStdString() << std::endl;
+    if(_debugMode)
+    {
+      std::cout << "margin: " << components[1].toStdString() << std::endl;
+    }
     int num = components[1].toInt();
     if (num > 0) {
       return num;
@@ -70,7 +76,10 @@ int Overlay::getMargin(QStringList components){
 
 int Overlay::getFontsize(QStringList components){
   if (components.size()>2) {
-    std::cout << "fontsize: " << components[2].toStdString() << std::endl;
+    if(_debugMode)
+    {
+      std::cout << "fontsize: " << components[2].toStdString() << std::endl;
+    }
     int num = components[2].toInt();
     if (num > 0) {
       return num;

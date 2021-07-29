@@ -8,13 +8,14 @@
 #include <sys/file.h>
 #include <errno.h>
 
+#include <getopt.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory>
 
 void usage(std::string programName) {
-    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s]" << std::endl;
+    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch]" << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -29,11 +30,28 @@ int main(int argc, char *argv[])
   bool recursive = false;
   bool shuffle = false;
   bool sorted = false;
+  bool debugMode = false;
   char aspect = 'a';
+  bool fitAspectAxisToWindow = false;
   std::string valid_aspects = "alp"; // all, landscape, portait
   std::string overlay = "";
-  while ((opt = getopt(argc, argv, "b:p:t:o:O:a:rsS")) != -1) {
+  int debugInt = 0;
+  int stretchInt = 0;
+  static struct option long_options[] =
+  {
+    {"verbose", no_argument,       &debugInt, 1},
+    {"stretch", no_argument,       &stretchInt, 1},
+  };
+  int option_index = 0;
+  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
+      case 0:
+          /* If this option set a flag, do nothing else now. */
+          if (long_options[option_index].flag != 0)
+            break;
+          usage(argv[0]);
+          return 1;
+          break;
       case 'p':
         path = optarg;
         break;
@@ -67,10 +85,21 @@ int main(int argc, char *argv[])
       case 'O':
         overlay = optarg;
         break;
+      case 'v':
+        debugMode = true;
+        break;
       default: /* '?' */
         usage(argv[0]);
         return 1;
     }
+  }
+  if(debugInt==1)
+  {
+    debugMode = true;
+  }
+  if(stretchInt==1)
+  {
+    fitAspectAxisToWindow = true;
   }
 
   if (path.empty())
@@ -103,10 +132,18 @@ int main(int argc, char *argv[])
   {
     selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser, aspect));
   }
-  std::cout << "Rotation Time: " << rotationSeconds << std::endl;
-  std::cout << "Overlay input: " << overlay << std::endl;
+  selector->setDebugMode(debugMode);
+  if(debugMode)
+  {
+    std::cout << "Rotation Time: " << rotationSeconds << std::endl;
+    std::cout << "Overlay input: " << overlay << std::endl;
+  }
   Overlay o(overlay);
+  o.setDebugMode(debugMode);
   w.setOverlay(&o);
+  w.setAspect(aspect);
+  w.setDebugMode(debugMode);
+  w.setFitAspectAxisToWindow(fitAspectAxisToWindow);
   w.show();
 
   ImageSwitcher switcher(w, rotationSeconds * 1000, selector);

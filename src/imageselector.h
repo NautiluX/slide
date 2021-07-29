@@ -14,12 +14,14 @@ public:
     ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect);
     virtual ~ImageSelector();
     virtual std::string getNextImage() = 0;
+    void setDebugMode(bool debugMode) { _debugMode = debugMode;}
 
 protected:
     int getImageRotation(const std::string &fileName);
     bool imageValidForAspect(const std::string &fileName);
     std::unique_ptr<PathTraverser>& pathTraverser;
     char _aspect;
+    bool _debugMode = false;
 };
 
 class RandomImageSelector : public ImageSelector

@@ -25,13 +25,18 @@ public:
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
     void setOverlay(Overlay* overlay);
-
+    void setAspect(char aspect);
+    void setDebugMode(bool debugMode) {_debugMode = debugMode;}
+    void setFitAspectAxisToWindow(bool fitAspectAxisToWindow) { _fitAspectAxisToWindow = fitAspectAxisToWindow; }
 private:
     Ui::MainWindow *ui;
 
     std::string currentImage;
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
+    char _aspect = 'a';
+    bool _debugMode = false;
+    bool _fitAspectAxisToWindow = false;
 
     Overlay* overlay;
 

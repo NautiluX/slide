@@ -118,7 +118,10 @@ std::string RandomImageSelector::getNextImage()
 
 unsigned int RandomImageSelector::selectRandom(const QStringList& images) const
 {
-  std::cout << "images: " << images.size() << std::endl;
+  if(_debugMode)
+  {
+    std::cout << "images: " << images.size() << std::endl;
+  }
   if (images.size() == 0)
   {
     throw std::string("No jpg images found in given folder");
