@@ -17,7 +17,7 @@ This project is maintained by myself during my spare time. If you like and use i
 ## Usage
 
 ```
-slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-O overlay_string]
+slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-O overlay_string] [-v] [--verbose] [--stretch]
 ```
 
 * `image_folder`: where to search for images (.jpg files)
@@ -28,6 +28,8 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
 * `aspect(default=a)`: the required aspect ratio of the picture to display. Valid values are 'a' (all), 'l' (landscape) and 'p' (portrait)
 * `background_opacity(default=150)`: opacity of the background filling image between 0 (black background) and 255
 * `blur_radius(default=20)`: blur radius of the background filling image
+* `-v` or `--verbose`: Verbose debug output when running, plus a thumbnail of the original image in the bottom left of the screen
+* `--stretch`: When in aspect mode 'l' or 'p' crop the image rather than leaving a blurred background. For example, in landscape mode this will make images as wide as the screen and crop the top and bottom to fit.
 * `-O` is used to create a overlay string.
   * It defines overlays for all four edges in the order `top-left;top-right;bottom-left;bottom-right`
   * All edges overlays are separated by `;`
