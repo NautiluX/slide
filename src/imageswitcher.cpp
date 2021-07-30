@@ -14,7 +14,8 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_pt
     window(w),
     timeout(timeout),
     selector(selector),
-    timer(this)
+    timer(this),
+    timerNoContent(this)
 {
 }
 
@@ -24,10 +25,12 @@ void ImageSwitcher::updateImage()
     if (filename == "")
     {
       window.warn("No image found.");
+      timerNoContent.start(timeoutNoContent);
     }
     else
     {
       window.setImage(filename);
+      timerNoContent.stop(); // we have loaded content so stop the fast polling
     }
 }
 
@@ -35,5 +38,6 @@ void ImageSwitcher::start()
 {
     updateImage();
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateImage()));
+    connect(&timerNoContent, SIGNAL(timeout()), this, SLOT(updateImage()));
     timer.start(timeout);
 }
