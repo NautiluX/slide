@@ -12,8 +12,8 @@
 #include <algorithm>    // std::shuffle
 #include <random>       // std::default_random_engine
 
-ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect):
-  pathTraverser(pathTraverser), _aspect(aspect)
+ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspectIn):
+  pathTraverser(pathTraverser), aspect(aspectIn)
 {
 }
 
@@ -61,7 +61,7 @@ bool ImageSelector::imageValidForAspect(const std::string &fileName)
     std::swap(imageWidth,imageHeight);
   }
 
-  switch(_aspect)
+  switch(aspect)
   {
     case 'a':
       // allow all
@@ -118,7 +118,7 @@ std::string RandomImageSelector::getNextImage()
 
 unsigned int RandomImageSelector::selectRandom(const QStringList& images) const
 {
-  if(_debugMode)
+  if(debugMode)
   {
     std::cout << "images: " << images.size() << std::endl;
   }

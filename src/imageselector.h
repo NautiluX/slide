@@ -11,17 +11,17 @@ class PathTraverser;
 class ImageSelector
 {
 public:
-    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect);
+    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspectIn);
     virtual ~ImageSelector();
     virtual std::string getNextImage() = 0;
-    void setDebugMode(bool debugMode) { _debugMode = debugMode;}
+    void setDebugMode(bool debugModeIn) { debugMode = debugModeIn;}
 
 protected:
     int getImageRotation(const std::string &fileName);
     bool imageValidForAspect(const std::string &fileName);
     std::unique_ptr<PathTraverser>& pathTraverser;
-    char _aspect;
-    bool _debugMode = false;
+    char aspect;
+    bool debugMode = false;
 };
 
 class RandomImageSelector : public ImageSelector
