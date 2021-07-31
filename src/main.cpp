@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
   bool fitAspectAxisToWindow = false;
   std::string valid_aspects = "alp"; // all, landscape, portait
   std::string overlay = "";
+  std::string imageList = ""; // comma delimited list of images to show
   int debugInt = 0;
   int stretchInt = 0;
   static struct option long_options[] =
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
     {"stretch", no_argument,       &stretchInt, 1},
   };
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:rsSv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:i:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 0:
           /* If this option set a flag, do nothing else now. */
@@ -88,6 +89,9 @@ int main(int argc, char *argv[])
       case 'v':
         debugMode = true;
         break;
+      case 'i':
+        imageList = optarg;
+        break;
       default: /* '?' */
         usage(argv[0]);
         return 1;
@@ -102,7 +106,7 @@ int main(int argc, char *argv[])
     fitAspectAxisToWindow = true;
   }
 
-  if (path.empty())
+  if (path.empty() && imageList.empty())
   {
     std::cout << "Error: Path expected." << std::endl;
     usage(argv[0]);
@@ -110,7 +114,11 @@ int main(int argc, char *argv[])
   }
 
   std::unique_ptr<PathTraverser> pathTraverser;
-  if (recursive)
+  if (!imageList.empty())
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(imageList));
+  }
+  else if (recursive)
   {
     pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path));
   }

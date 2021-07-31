@@ -41,4 +41,14 @@ class DefaultPathTraverser : public PathTraverser
     QDir directory;
 };
 
+class ImageListPathTraverser : public PathTraverser
+{
+  public:
+    ImageListPathTraverser(const std::string &imageListString);
+    virtual ~ImageListPathTraverser();
+    QStringList getImages() const;
+    virtual const std::string getImagePath(const std::string image) const;
+  private:
+    QStringList imageList;
+};
 #endif // PATHTRAVERSER_H

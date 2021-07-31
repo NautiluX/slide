@@ -17,10 +17,11 @@ This project is maintained by myself during my spare time. If you like and use i
 ## Usage
 
 ```
-slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-O overlay_string] [-v] [--verbose] [--stretch]
+slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] [-p image_folder|-i imageFile,...] [-r] [-O overlay_string] [-v] [--verbose] [--stretch]
 ```
 
 * `image_folder`: where to search for images (.jpg files)
+* `-i imageFile,...`: comma delimited list of full paths to image files to display
 * `-r` for recursive traversal of `image_folder`
 * `-s` for shuffle instead of random image rotation
 * `-S` for sorted rotation (files ordered by name, first images then subfolders)

@@ -61,3 +61,24 @@ const std::string DefaultPathTraverser::getImagePath(const std::string image) co
 {
   return directory.filePath(QString(image.c_str())).toStdString();
 }
+
+
+ImageListPathTraverser::ImageListPathTraverser(const std::string &imageListString):
+  PathTraverser("")
+{
+  QString str = QString(imageListString.c_str());
+  imageList = str.split(QLatin1Char(','));
+}
+
+ImageListPathTraverser::~ImageListPathTraverser() {}
+
+
+QStringList ImageListPathTraverser::getImages() const
+{
+  return imageList;
+}
+
+const std::string ImageListPathTraverser::getImagePath(const std::string image) const
+{
+  return image;
+}
