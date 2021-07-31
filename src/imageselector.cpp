@@ -159,8 +159,20 @@ std::string ShuffleImageSelector::getNextImage()
   std::string filename = pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString());
   if(!QFileInfo::exists(QString(filename.c_str())))
   {
-    std::cout << "file not found: " << filename << std::endl;
-    current_image_shuffle = images.size();
+    if(debugMode)
+    {
+      std::cout << "file not found: " << filename << std::endl;
+    }
+    current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
+    return getNextImage();
+  }
+  if (!imageValidForAspect(filename))
+  {
+    if(debugMode)
+    {
+      std::cout << "image has invalid aspect: " << filename << "(images left:" << (images.size()-current_image_shuffle) << ")" << std::endl;
+    }
+    current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
     return getNextImage();
   }
   std::cout << "updating image: " << filename << std::endl;
@@ -197,10 +209,13 @@ std::string SortedImageSelector::getNextImage()
   {
     images = pathTraverser->getImages();
     std::sort(images.begin(), images.end());
-    std::cout << "read " << images.size() << " images." << std::endl;
-    for (int i = 0;i <images.size();i++){
-      
-        std::cout << images[i].toStdString() << std::endl;
+    if(debugMode)
+    {
+      std::cout << "read " << images.size() << " images." << std::endl;
+      for (int i = 0;i <images.size();i++){
+        
+          std::cout << images[i].toStdString() << std::endl;
+      }
     }
   }
   if (images.size() == 0)
@@ -210,9 +225,21 @@ std::string SortedImageSelector::getNextImage()
   std::string filename = pathTraverser->getImagePath(images.takeFirst().toStdString());
   if(!QFileInfo::exists(QString(filename.c_str())))
   {
-    std::cout << "file not found: " << filename << std::endl;
+    if(debugMode)
+    {
+      std::cout << "file not found: " << filename << std::endl;
+    }
     return getNextImage();
   }
+  if (!imageValidForAspect(filename))
+  {
+    if(debugMode)
+    {
+      std::cout << "image has invalid aspect: " << filename << std::endl;
+    }
+    return getNextImage();
+  }
+
   std::cout << "updating image: " << filename << std::endl;
   return filename;
 }
