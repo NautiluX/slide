@@ -152,7 +152,10 @@ void MainWindow::setOverlay(Overlay* o)
 
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
 {
-    if (scaled.width() < width()) {
+    if (fitAspectAxisToWindow) {
+      // our scaled version will just fill the whole screen, us it directly
+      return scaled.copy();
+    } else if (scaled.width() < width()) {
       QPixmap background = blur(originalSize.scaledToWidth(width(), Qt::SmoothTransformation));
       QRect rect(0, (background.height() - height())/2, width(), height());
       return background.copy(rect);
