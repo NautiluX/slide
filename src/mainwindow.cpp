@@ -152,7 +152,7 @@ void MainWindow::setOverlay(Overlay* o)
 
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
 {
-    if (fitAspectAxisToWindow) {
+    if (imageOptions.fitAspectAxisToWindow) {
       // our scaled version will just fill the whole screen, us it directly
       return scaled.copy();
     } else if (scaled.width() < width()) {
