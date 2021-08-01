@@ -46,7 +46,16 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
     * `<dir>`directory of the current image
     * `<path>`path to the current image without filename
   * Example: `slide -p ./images -O "20|60|Time: <time>;;;Picture taken at <exifdatetime>"`
-      
+
+## Folder Options file
+When using the default or recursive folder mode we support having per folder display options. The options are stored in a file called "options.json" and currently support the following option
+```
+{
+    "fitAspectAxisToWindow": false
+}
+```
+* `fitAspectAxisToWindow` : apply the --stretch option to files in this folder
+
 ## Dependencies
 
 * qt5-qmake

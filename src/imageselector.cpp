@@ -12,8 +12,8 @@
 #include <algorithm>    // std::shuffle
 #include <random>       // std::default_random_engine
 
-ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspectIn):
-  pathTraverser(pathTraverser), aspect(aspectIn)
+ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspectIn, bool fitAspectAxisToWindowIn):
+  pathTraverser(pathTraverser), aspect(aspectIn), fitAspectAxisToWindow(fitAspectAxisToWindowIn)
 {
 }
 
@@ -50,12 +50,11 @@ int ImageSelector::getImageRotation(const std::string &fileName)
   return degrees;
 }
 
-bool ImageSelector::imageValidForAspect(const std::string &fileName)
+bool ImageSelector::imageValidForAspect(const std::string &fileName, const int rotation)
 {
   QPixmap p( fileName.c_str() );
   int imageWidth = p.width();
   int imageHeight = p.height();
-  int rotation = getImageRotation(fileName);
   if ( rotation == 90 || rotation == 270 )
   {
     std::swap(imageWidth,imageHeight);
@@ -83,15 +82,15 @@ bool ImageSelector::imageValidForAspect(const std::string &fileName)
 }
 
 
-RandomImageSelector::RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect):
-  ImageSelector(pathTraverser, aspect)
+RandomImageSelector::RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow):
+  ImageSelector(pathTraverser, aspect, fitAspectAxisToWindow)
 {
   srand (time(NULL));
 }
 
 RandomImageSelector::~RandomImageSelector(){}
 
-std::string RandomImageSelector::getNextImage()
+const std::string RandomImageSelector::getNextImage(ImageOptions_t &options)
 {
   std:: string filename;
   try
@@ -101,7 +100,8 @@ std::string RandomImageSelector::getNextImage()
       QStringList images = pathTraverser->getImages();
       unsigned int selectedImage = selectRandom(images);
       filename = pathTraverser->getImagePath(images.at(selectedImage).toStdString());
-      if (!imageValidForAspect(filename))
+      options.rotation = getImageRotation(filename);
+      if (!imageValidForAspect(filename, options.rotation))
       {
         filename.clear();
       }
@@ -113,6 +113,9 @@ std::string RandomImageSelector::getNextImage()
     std::cerr << "Error: " << err << std::endl;
   }
   std::cout << "updating image: " << filename << std::endl;
+  options.aspect = aspect;
+  options.fitAspectAxisToWindow = fitAspectAxisToWindow;
+  pathTraverser->UpdateOptionsForImage(filename, options);
   return filename;
 }
 
@@ -129,8 +132,8 @@ unsigned int RandomImageSelector::selectRandom(const QStringList& images) const
   return rand() % images.size();
 }
 
-ShuffleImageSelector::ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect):
-  ImageSelector(pathTraverser, aspect),
+ShuffleImageSelector::ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow):
+  ImageSelector(pathTraverser, aspect, fitAspectAxisToWindow),
   current_image_shuffle(-1),
   images()
 {
@@ -141,7 +144,7 @@ ShuffleImageSelector::~ShuffleImageSelector()
 {
 }
 
-std::string ShuffleImageSelector::getNextImage()
+const std::string ShuffleImageSelector::getNextImage(ImageOptions_t &options)
 {
   if (images.size() == 0 || current_image_shuffle >= images.size())
   {
@@ -164,24 +167,28 @@ std::string ShuffleImageSelector::getNextImage()
       std::cout << "file not found: " << filename << std::endl;
     }
     current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
-    return getNextImage();
+    return getNextImage(options);
   }
-  if (!imageValidForAspect(filename))
+  options.rotation = getImageRotation(filename);
+  if (!imageValidForAspect(filename, options.rotation))
   {
     if(debugMode)
     {
       std::cout << "image has invalid aspect: " << filename << "(images left:" << (images.size()-current_image_shuffle) << ")" << std::endl;
     }
     current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
-    return getNextImage();
+    return getNextImage(options);
   }
   std::cout << "updating image: " << filename << std::endl;
   current_image_shuffle = current_image_shuffle + 1;
+  options.aspect = aspect;
+  options.fitAspectAxisToWindow = fitAspectAxisToWindow;
+  pathTraverser->UpdateOptionsForImage(filename, options);
   return filename;
 }
 
-SortedImageSelector::SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect):
-  ImageSelector(pathTraverser, aspect),
+SortedImageSelector::SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow):
+  ImageSelector(pathTraverser, aspect, fitAspectAxisToWindow),
   images()
 {
   srand (time(NULL));
@@ -203,7 +210,7 @@ bool operator<(const QString& lhs, const QString& rhs) noexcept{
 
 }
 
-std::string SortedImageSelector::getNextImage()
+const std::string SortedImageSelector::getNextImage(ImageOptions_t &options)
 {
   if (images.size() == 0)
   {
@@ -229,17 +236,21 @@ std::string SortedImageSelector::getNextImage()
     {
       std::cout << "file not found: " << filename << std::endl;
     }
-    return getNextImage();
+    return getNextImage(options);
   }
-  if (!imageValidForAspect(filename))
+  options.rotation = getImageRotation(filename);
+  if (!imageValidForAspect(filename, options.rotation))
   {
     if(debugMode)
     {
       std::cout << "image has invalid aspect: " << filename << std::endl;
     }
-    return getNextImage();
+    return getNextImage(options);
   }
 
   std::cout << "updating image: " << filename << std::endl;
+  options.aspect = aspect;
+  options.fitAspectAxisToWindow = fitAspectAxisToWindow;
+  pathTraverser->UpdateOptionsForImage(filename, options);
   return filename;
 }

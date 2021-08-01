@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QPixmap>
+#include "imageselector.h"
 
 namespace Ui {
 class MainWindow;
@@ -20,23 +21,20 @@ public:
     void keyPressEvent(QKeyEvent* event);
     void resizeEvent(QResizeEvent* event);
     ~MainWindow();
-    void setImage(std::string path);
+    void setImage(const std::string& path, const ImageOptions_t &options);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
     void setOverlay(Overlay* overlay);
-    void setAspect(char aspectIn);
     void setDebugMode(bool debugModeIn) {debugMode = debugModeIn;}
-    void setFitAspectAxisToWindow(bool fitAspectAxisToWindowIn) { fitAspectAxisToWindow = fitAspectAxisToWindowIn; }
 private:
     Ui::MainWindow *ui;
 
     std::string currentImage;
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
-    char aspect = 'a';
+    ImageOptions_t imageOptions;
     bool debugMode = false;
-    bool fitAspectAxisToWindow = false;
 
     Overlay* overlay;
 

@@ -116,29 +116,29 @@ int main(int argc, char *argv[])
   std::unique_ptr<PathTraverser> pathTraverser;
   if (!imageList.empty())
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(imageList));
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(imageList, debugMode));
   }
   else if (recursive)
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path));
+    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path, debugMode));
   }
   else
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path));
+    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path, debugMode));
   }
 
   std::unique_ptr<ImageSelector> selector;
   if (sorted)
   {
-    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser, aspect));
+    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser, aspect, fitAspectAxisToWindow));
   }
   else if (shuffle)
   {
-    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser, aspect));
+    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser, aspect, fitAspectAxisToWindow));
   }
   else
   {
-    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser, aspect));
+    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser, aspect, fitAspectAxisToWindow));
   }
   selector->setDebugMode(debugMode);
   if(debugMode)
@@ -149,9 +149,7 @@ int main(int argc, char *argv[])
   Overlay o(overlay);
   o.setDebugMode(debugMode);
   w.setOverlay(&o);
-  w.setAspect(aspect);
   w.setDebugMode(debugMode);
-  w.setFitAspectAxisToWindow(fitAspectAxisToWindow);
   w.show();
 
   ImageSwitcher switcher(w, rotationSeconds * 1000, selector);

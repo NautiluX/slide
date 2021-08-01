@@ -53,45 +53,11 @@ void MainWindow::resizeEvent(QResizeEvent* event)
    updateImage(true);
 }
 
-void MainWindow::setImage(std::string path)
+void MainWindow::setImage(const std::string& path, const ImageOptions_t& options)
 {
     currentImage = path;
+    imageOptions = options;
     updateImage(false);
-}
-
-int MainWindow::getImageRotation()
-{
-    if (currentImage == "")
-        return 0;
-
-    int orientation = 0;
-    ExifData *exifData = exif_data_new_from_file(currentImage.c_str());
-    if (exifData)
-    {
-      ExifByteOrder byteOrder = exif_data_get_byte_order(exifData);
-      ExifEntry *exifEntry = exif_data_get_entry(exifData, EXIF_TAG_ORIENTATION);
-
-      if (exifEntry)
-      {
-        orientation = exif_get_short(exifEntry->data, byteOrder);
-      }
-      exif_data_free(exifData);
-    }
-
-    int degrees = 0;
-    switch(orientation) {
-        case 8:
-        degrees = 270;
-        break;
-        case 3:
-        degrees = 180;
-        break;
-        case 6:
-        degrees = 90;
-        break;
-    }
-
-    return degrees;
 }
 
 void MainWindow::updateImage(bool immediately)
@@ -184,11 +150,6 @@ void MainWindow::setOverlay(Overlay* o)
   overlay = o;
 }
 
-void MainWindow::setAspect(char aspectIn)
-{
-  aspect = aspectIn;
-}
-
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
 {
     if (scaled.width() < width()) {
@@ -206,21 +167,21 @@ QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPix
 QPixmap MainWindow::getRotatedPixmap(const QPixmap& p)
 {
     QMatrix matrix;
-    matrix.rotate(getImageRotation());
+    matrix.rotate(imageOptions.rotation);
     return p.transformed(matrix);
 }
 
 QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
-  if (fitAspectAxisToWindow)
+  if (imageOptions.fitAspectAxisToWindow)
   {
-    if ( aspect == 'p')
+    if (imageOptions.aspect == 'p')
     {
       // potrait mode, make height of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToHeight(height(), Qt::SmoothTransformation);
       return pTemp.copy(0,0,width(),height());
     }
-    else if ( aspect == 'l')
+    else if (imageOptions.aspect == 'l')
     {
       // landscape mode, make width of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToWidth(width(), Qt::SmoothTransformation);
