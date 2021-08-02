@@ -109,6 +109,11 @@ void MainWindow::updateImage(bool immediately)
     }
 
     QPixmap p( currentImage.c_str() );
+    if(debugMode)
+    {
+      std::cout << "size:" << p.width() << "x" << p.height() << std::endl;
+    }
+
     QPixmap rotated = getRotatedPixmap(p);
     QPixmap scaled = getScaledPixmap(rotated);
     QPixmap background = getBlurredBackground(rotated, scaled);
@@ -120,6 +125,21 @@ void MainWindow::updateImage(bool immediately)
       drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage).c_str(), Qt::AlignTop|Qt::AlignRight);
       drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage).c_str(), Qt::AlignBottom|Qt::AlignLeft);
       drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage).c_str(), Qt::AlignBottom|Qt::AlignRight);
+      if (debugMode)
+      {
+        // draw a thumbnail version of the source image in the bottom left, to check for cropping issues
+        QPainter pt(&background);
+        QBrush brush(QColor(255, 255, 255, 255));
+        int margin = 10;
+        QPixmap thumbNail = p.scaledToWidth(200, Qt::SmoothTransformation);
+        pt.fillRect(background.width() - thumbNail.width() - 2*margin,
+                     background.height()-thumbNail.height() - 2*margin,
+                     thumbNail.width() +2*margin, thumbNail.height()+2*margin, brush);
+
+        pt.drawPixmap( background.width() - thumbNail.width() - margin,
+                     background.height()-thumbNail.height() - margin, 
+                     thumbNail);
+      }
     }
 
     label->setPixmap(background);
@@ -164,13 +184,22 @@ void MainWindow::setOverlay(Overlay* o)
   overlay = o;
 }
 
+void MainWindow::setAspect(char aspectIn)
+{
+  aspect = aspectIn;
+}
+
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
 {
-    if (scaled.width() < width()) {
+    if (fitAspectAxisToWindow) {
+      // our scaled version will just fill the whole screen, us it directly
+      return scaled.copy();
+    } else if (scaled.width() < width()) {
       QPixmap background = blur(originalSize.scaledToWidth(width(), Qt::SmoothTransformation));
       QRect rect(0, (background.height() - height())/2, width(), height());
       return background.copy(rect);
     } else {
+      // aspect 'p' or the image is not as wide as the screen
       QPixmap background = blur(originalSize.scaledToHeight(height(), Qt::SmoothTransformation));
       QRect rect((background.width() - width())/2, 0, width(), height());
       return background.copy(rect);
@@ -186,9 +215,28 @@ QPixmap MainWindow::getRotatedPixmap(const QPixmap& p)
 
 QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
-    int w = width();
-    int h = height();
-    return p.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  if (fitAspectAxisToWindow)
+  {
+    if ( aspect == 'p')
+    {
+      // potrait mode, make height of image fit screen and crop top/bottom
+      QPixmap pTemp = p.scaledToHeight(height(), Qt::SmoothTransformation);
+      return pTemp.copy(0,0,width(),height());
+    }
+    else if ( aspect == 'l')
+    {
+      // landscape mode, make width of image fit screen and crop top/bottom
+      QPixmap pTemp = p.scaledToWidth(width(), Qt::SmoothTransformation);
+      //int imageTempWidth = pTemp.width();
+      //int imageTempHeight = pTemp.height();
+      return pTemp.copy(0,0,width(),height());
+    }
+  }
+
+  // just scale the best we can for the given photo
+  int w = width();
+  int h = height();
+  return p.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }
 
 void MainWindow::drawBackground(const QPixmap& originalSize, const QPixmap& scaled)

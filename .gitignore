@@ -1,3 +1,5 @@
 make
 .swp
 .git
+build
+.vscode

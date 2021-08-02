@@ -27,11 +27,13 @@ class Overlay
     int getMarginBottomRight();
     int getFontsizeBottomRight();
 
+    void setDebugMode(const bool debugModeIn) { debugMode = debugModeIn; }
 
   private:
     const std::string overlayInput;
     int margin;
     int fontsize;
+    bool debugMode = false;
 
     QString topLeftTemplate;
     QString topRightTemplate;
