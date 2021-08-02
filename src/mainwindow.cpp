@@ -23,6 +23,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
 
+    setAttribute(Qt::WA_AcceptTouchEvents);
+
     QTimer::singleShot(5, this, SLOT(showFullScreen()));
     QApplication::setOverrideCursor(Qt::BlankCursor);
     QLabel *label = this->findChild<QLabel*>("image");
@@ -45,6 +47,59 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     }
     else
         QWidget::keyPressEvent(event);
+}
+
+bool isTouchEvent(const QEvent &event)
+{
+    if(event.type() == QEvent::TouchBegin)
+        return true;
+    if(event.type() == QEvent::TouchUpdate)
+        return true;
+    return false;    
+}
+
+bool isQuitCombination(const QTouchEvent &touchEvent)
+{
+    bool topLeftTouched = false;
+    bool topRightTouched = false;
+    bool bottomLeftTouched = false;
+    bool bottomRightTouched = false;
+    for(const auto &touchPoint : touchEvent.touchPoints())
+    {
+        const qreal normalizedCornerSize = 0.1;
+        const qreal x = touchPoint.normalizedPos().x();
+        const qreal y = touchPoint.normalizedPos().y();
+        if(x < normalizedCornerSize)
+        {
+            if(y < normalizedCornerSize)
+                topLeftTouched = true;
+            else if(y > 1-normalizedCornerSize)
+                bottomLeftTouched = true;
+        }
+        else if(x > 1-normalizedCornerSize)
+        {
+            if(y < normalizedCornerSize)
+                topRightTouched = true;
+            else if(y > 1-normalizedCornerSize)
+                bottomRightTouched = true;
+        }
+    }
+    return topLeftTouched && topRightTouched
+        && bottomLeftTouched && bottomRightTouched;
+}
+
+bool MainWindow::event(QEvent* event)
+{
+    if(isTouchEvent(*event))
+    {
+        if(isQuitCombination(dynamic_cast<QTouchEvent&>(*event)))
+            QCoreApplication::quit();
+    }
+    else
+    {
+        return QMainWindow::event(event);
+    }
+    return true;
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
