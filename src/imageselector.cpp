@@ -19,7 +19,7 @@ ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char
 
 ImageSelector::~ImageSelector(){}
 
-int ImageSelector::getImageRotation(const std::string &fileName)
+int ImageSelector::getImageRotation(const std::string& fileName)
 {
   int orientation = 0;
   ExifData *exifData = exif_data_new_from_file(fileName.c_str());
@@ -50,7 +50,29 @@ int ImageSelector::getImageRotation(const std::string &fileName)
   return degrees;
 }
 
-bool ImageSelector::imageValidForAspect(const std::string &fileName)
+bool ImageSelector::imageMatchesFilter(const std::string& fileName)
+{
+  if(!QFileInfo::exists(QString(fileName.c_str())))
+  {
+    if(debugMode)
+    {
+      std::cout << "file not found: " << fileName << std::endl;
+    }
+    return false;
+  }
+
+  if(!imageValidForAspect(fileName)) {
+    if(debugMode)
+    {
+      std::cout << "image aspect ratio doesn't match filter '" << aspect << "' : " << fileName << std::endl;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+bool ImageSelector::imageValidForAspect(const std::string& fileName)
 {
   QPixmap p( fileName.c_str() );
   int imageWidth = p.width();
@@ -96,17 +118,14 @@ std::string RandomImageSelector::getNextImage()
   std:: string filename;
   try
   {
-    while (filename.empty())
+    QStringList images = pathTraverser->getImages();
+    unsigned int selectedImage = selectRandom(images);
+    filename = pathTraverser->getImagePath(images.at(selectedImage).toStdString());
+    while(!imageMatchesFilter(filename))
     {
-      QStringList images = pathTraverser->getImages();
       unsigned int selectedImage = selectRandom(images);
       filename = pathTraverser->getImagePath(images.at(selectedImage).toStdString());
-      if (!imageValidForAspect(filename))
-      {
-        filename.clear();
-      }
     }
-
   }
   catch(const std::string& err) 
   {
@@ -143,6 +162,24 @@ ShuffleImageSelector::~ShuffleImageSelector()
 
 std::string ShuffleImageSelector::getNextImage()
 {
+  reloadImagesIfNoneLeft();
+  if (images.size() == 0)
+  {
+    return "";
+  }
+  std::string filename = pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString());
+  current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
+  while(!imageMatchesFilter(filename)) {
+    reloadImagesIfNoneLeft();
+    std::string filename = pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString());
+    current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
+  }
+  std::cout << "updating image: " << filename << std::endl;
+  return filename;
+}
+
+void ShuffleImageSelector::reloadImagesIfNoneLeft()
+{
   if (images.size() == 0 || current_image_shuffle >= images.size())
   {
     current_image_shuffle = 0;
@@ -152,32 +189,6 @@ std::string ShuffleImageSelector::getNextImage()
     std::mt19937 randomizer(rd());
     std::shuffle(images.begin(), images.end(), randomizer);
   }
-  if (images.size() == 0)
-  {
-    return "";
-  }
-  std::string filename = pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString());
-  if(!QFileInfo::exists(QString(filename.c_str())))
-  {
-    if(debugMode)
-    {
-      std::cout << "file not found: " << filename << std::endl;
-    }
-    current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
-    return getNextImage();
-  }
-  if (!imageValidForAspect(filename))
-  {
-    if(debugMode)
-    {
-      std::cout << "image has invalid aspect: " << filename << "(images left:" << (images.size()-current_image_shuffle) << ")" << std::endl;
-    }
-    current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
-    return getNextImage();
-  }
-  std::cout << "updating image: " << filename << std::endl;
-  current_image_shuffle = current_image_shuffle + 1;
-  return filename;
 }
 
 SortedImageSelector::SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect):
@@ -205,6 +216,23 @@ bool operator<(const QString& lhs, const QString& rhs) noexcept{
 
 std::string SortedImageSelector::getNextImage()
 {
+  reloadImagesIfEmpty();
+  if (images.size() == 0)
+  {
+    return "";
+  }
+  std::string filename = pathTraverser->getImagePath(images.takeFirst().toStdString());
+  while(!imageMatchesFilter(filename)) {
+    reloadImagesIfEmpty();
+    filename = pathTraverser->getImagePath(images.takeFirst().toStdString());
+  }
+
+  std::cout << "updating image: " << filename << std::endl;
+  return filename;
+}
+
+void SortedImageSelector::reloadImagesIfEmpty()
+{
   if (images.size() == 0)
   {
     images = pathTraverser->getImages();
@@ -213,33 +241,8 @@ std::string SortedImageSelector::getNextImage()
     {
       std::cout << "read " << images.size() << " images." << std::endl;
       for (int i = 0;i <images.size();i++){
-        
           std::cout << images[i].toStdString() << std::endl;
       }
     }
   }
-  if (images.size() == 0)
-  {
-    return "";
-  }
-  std::string filename = pathTraverser->getImagePath(images.takeFirst().toStdString());
-  if(!QFileInfo::exists(QString(filename.c_str())))
-  {
-    if(debugMode)
-    {
-      std::cout << "file not found: " << filename << std::endl;
-    }
-    return getNextImage();
-  }
-  if (!imageValidForAspect(filename))
-  {
-    if(debugMode)
-    {
-      std::cout << "image has invalid aspect: " << filename << std::endl;
-    }
-    return getNextImage();
-  }
-
-  std::cout << "updating image: " << filename << std::endl;
-  return filename;
 }
