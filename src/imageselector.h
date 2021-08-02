@@ -17,8 +17,9 @@ public:
     void setDebugMode(bool debugModeIn) { debugMode = debugModeIn;}
 
 protected:
-    int getImageRotation(const std::string &fileName);
-    bool imageValidForAspect(const std::string &fileName);
+    int getImageRotation(const std::string& fileName);
+    bool imageMatchesFilter(const std::string& fileName);
+    bool imageValidForAspect(const std::string& fileName);
     std::unique_ptr<PathTraverser>& pathTraverser;
     char aspect;
     bool debugMode = false;
@@ -43,6 +44,7 @@ public:
     virtual std::string getNextImage();
 
 private:
+    void reloadImagesIfNoneLeft();
     int current_image_shuffle;
     QStringList images;
 };
@@ -55,6 +57,7 @@ public:
     virtual std::string getNextImage();
 
 private:
+    void reloadImagesIfEmpty();
     QStringList images;
 };
 #endif // IMAGESELECTOR_H
