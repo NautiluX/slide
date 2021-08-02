@@ -46,6 +46,8 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
     * `<path>`path to the current image without filename
   * Example: `slide -p ./images -O "20|60|Time: <time>;;;Picture taken at <exifdatetime>"`
       
+To exit the application, press escape. If you're using a touch display, touch all 4 corners at the same time.
+
 ## Dependencies
 
 * qt5-qmake
