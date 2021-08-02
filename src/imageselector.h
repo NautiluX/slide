@@ -26,7 +26,7 @@ public:
 protected:
     int getImageRotation(const std::string &fileName);
     bool imageValidForAspect(const std::string &fileName, const int rotation);
-    bool imageMatchesFilter(const std::string& fileName);
+    bool imageMatchesFilter(const std::string& fileName, const int rotation);
     std::unique_ptr<PathTraverser>& pathTraverser;
     char aspect;
     bool fitAspectAxisToWindow = false;

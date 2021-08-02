@@ -50,7 +50,7 @@ int ImageSelector::getImageRotation(const std::string& fileName)
   return degrees;
 }
 
-bool ImageSelector::imageMatchesFilter(const std::string& fileName, int rotation)
+bool ImageSelector::imageMatchesFilter(const std::string& fileName, const int rotation)
 {
   if(!QFileInfo::exists(QString(fileName.c_str())))
   {
@@ -200,8 +200,8 @@ void ShuffleImageSelector::reloadImagesIfNoneLeft()
   }
 }
 
-SortedImageSelector::SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect):
-  ImageSelector(pathTraverser, aspect),
+SortedImageSelector::SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow):
+  ImageSelector(pathTraverser, aspect, fitAspectAxisToWindow),
   images()
 {
   srand (time(NULL));
