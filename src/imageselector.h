@@ -26,6 +26,7 @@ public:
 protected:
     int getImageRotation(const std::string &fileName);
     bool imageValidForAspect(const std::string &fileName, const int rotation);
+    bool imageMatchesFilter(const std::string& fileName);
     std::unique_ptr<PathTraverser>& pathTraverser;
     char aspect;
     bool fitAspectAxisToWindow = false;
@@ -51,6 +52,7 @@ public:
     virtual const std::string getNextImage(ImageOptions_t &options);
 
 private:
+    void reloadImagesIfNoneLeft();
     int current_image_shuffle;
     QStringList images;
 };
@@ -63,6 +65,7 @@ public:
     virtual const std::string getNextImage(ImageOptions_t &options);
 
 private:
+    void reloadImagesIfEmpty();
     QStringList images;
 };
 #endif // IMAGESELECTOR_H
