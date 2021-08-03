@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "overlay.h"
 #include "ui_mainwindow.h"
+#include "imageswitcher.h"
 #include <QLabel>
 #include <QPixmap>
 #include <QBitmap>
@@ -14,6 +15,7 @@
 #include <QRect>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
+#include <QDesktopWidget>
 #include <sstream>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -104,9 +106,42 @@ bool MainWindow::event(QEvent* event)
 
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
-   QMainWindow::resizeEvent(event);
-   updateImage(true);
+  QMainWindow::resizeEvent(event);
+  // the window size in this event may not match the monitor size, so use QDesktopWidget to find the true monitor size
+  QDesktopWidget desktop;
+  QSize screenSize = desktop.screenGeometry(this).size();
+  bool isLandscape = screenSize.width() > screenSize.height();
+  if (imageAspectMatchesMonitor)
+  {
+    baseImageOptions.onlyAspect = isLandscape ? EImageAspect_Landscape : EImageAspect_Portrait; 
+  }
+  if(debugMode)
+  {
+    std::cout << "Got resize:" << this << " " << screenSize.width() << "," << screenSize.height() << " , is landscape? " << (isLandscape ? "y" : "n") << std::endl;
+  }
+  updateImage(true);
+  QTimer::singleShot(5, this, SLOT(checkWindowSize()));
+  if(lastScreenSize != screenSize && switcher != nullptr)
+  {
+    lastScreenSize = screenSize;
+    switcher->updateImage();
+  }
 }
+
+void MainWindow::checkWindowSize()
+{
+  QDesktopWidget desktop;
+  QRect screenSize = desktop.screenGeometry(this);
+  if(size() != screenSize.size())
+  {
+    if(debugMode)
+    {
+      std::cout << "Resizing Window" << screenSize.width() << "," << screenSize.height() << std::endl;
+    }
+    setFixedSize(screenSize.size());
+  }
+}
+
 
 void MainWindow::setImage(const ImageDetails_t &imageDetails)
 {
@@ -116,6 +151,7 @@ void MainWindow::setImage(const ImageDetails_t &imageDetails)
 
 void MainWindow::updateImage(bool immediately)
 {
+    checkWindowSize();
     if (currentImage.filename == "")
       return;
 
@@ -131,7 +167,7 @@ void MainWindow::updateImage(bool immediately)
     QPixmap p( currentImage.filename.c_str() );
     if(debugMode)
     {
-      std::cout << "size:" << p.width() << "x" << p.height() << std::endl;
+      std::cout << "size:" << p.width() << "x" << p.height() << "(window:" << width() << "," << height() << ")" << std::endl;
     }
 
     QPixmap rotated = getRotatedPixmap(p);
@@ -301,4 +337,14 @@ void MainWindow::warn(std::string text)
 {
   QLabel *label = this->findChild<QLabel*>("image");
   label->setText(text.c_str());
+}
+
+void MainWindow::setBaseOptions(const ImageDisplayOptions_t &baseOptionsIn) 
+{ 
+  baseImageOptions = baseOptionsIn; 
+  if(baseImageOptions.onlyAspect == EImageAspect_Monitor)
+  {
+    imageAspectMatchesMonitor = true;
+    baseImageOptions.onlyAspect = width() >= height() ? EImageAspect_Landscape : EImageAspect_Portrait;
+  }
 }

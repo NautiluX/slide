@@ -4,7 +4,7 @@
 #include <string>
 
 // possible aspect ratios of an image
-enum EImageAspect { EImageAspect_Landscape = 0, EImageAspect_Portrait, EImageAspect_Any };
+enum EImageAspect { EImageAspect_Landscape = 0, EImageAspect_Portrait, EImageAspect_Any, EImageAspect_Monitor /* match monitors aspect */ };
 
 // options to consider when displaying an image
 struct ImageDisplayOptions_t

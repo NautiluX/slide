@@ -51,7 +51,6 @@ void PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, Im
         std::cout << "Fit Aspect:" << options.fitAspectAxisToWindow << std::endl;
       }
     }
-    // read json
   }
 }
 

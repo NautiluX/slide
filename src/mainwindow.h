@@ -12,6 +12,7 @@ class MainWindow;
 class QLabel;
 class QKeyEvent;
 class Overlay;
+class ImageSwitcher;
 
 class MainWindow : public QMainWindow
 {
@@ -29,18 +30,24 @@ public:
     void warn(std::string text);
     void setOverlay(Overlay* overlay);
     void setDebugMode(bool debugModeIn) {debugMode = debugModeIn;}
-    void setBaseOptions(const ImageDisplayOptions_t &baseOptionsIn) { baseImageOptions = baseOptionsIn; }
+    void setBaseOptions(const ImageDisplayOptions_t &baseOptionsIn);
     const ImageDisplayOptions_t &getBaseOptions() { return baseImageOptions; }
+    void setImageSwitcher(ImageSwitcher *switcherIn) { switcher = switcherIn; }
+public slots:
+    void checkWindowSize();
 private:
     Ui::MainWindow *ui;
 
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
     ImageDisplayOptions_t baseImageOptions;
+    bool imageAspectMatchesMonitor = false;
     ImageDetails_t currentImage;
     bool debugMode = false;
+    QSize lastScreenSize = {0,0};
 
-    Overlay* overlay;
+    Overlay* overlay = nullptr;
+    ImageSwitcher *switcher = nullptr;
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 

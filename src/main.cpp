@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   bool sorted = false;
   bool debugMode = false;
   ImageDisplayOptions_t baseDisplayOptions;
-  std::string valid_aspects = "alp"; // all, landscape, portait
+  std::string valid_aspects = "alpm"; // all, landscape, portait
   std::string overlay = "";
   std::string imageList = ""; // comma delimited list of images to show
   int debugInt = 0;
@@ -70,6 +70,9 @@ int main(int argc, char *argv[])
               break;
             case 'p':
               baseDisplayOptions.onlyAspect = EImageAspect_Portrait;
+              break;
+            case 'm':
+              baseDisplayOptions.onlyAspect = EImageAspect_Monitor;
               break;
             default:
             case 'a':
@@ -168,6 +171,7 @@ int main(int argc, char *argv[])
   w.show();
 
   ImageSwitcher switcher(w, rotationSeconds * 1000, selector);
+  w.setImageSwitcher(&switcher);
   switcher.start();
   return a.exec();
 }
