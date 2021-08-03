@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QPixmap>
+#include "imagestructs.h"
 #include "imageselector.h"
 
 namespace Ui {
@@ -22,19 +23,21 @@ public:
     bool event(QEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     ~MainWindow();
-    void setImage(const std::string& path, const ImageOptions_t &options);
+    void setImage(const ImageDetails_t &imageDetails);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
     void setOverlay(Overlay* overlay);
     void setDebugMode(bool debugModeIn) {debugMode = debugModeIn;}
+    void setBaseOptions(const ImageDisplayOptions_t &baseOptionsIn) { baseImageOptions = baseOptionsIn; }
+    const ImageDisplayOptions_t &getBaseOptions() { return baseImageOptions; }
 private:
     Ui::MainWindow *ui;
 
-    std::string currentImage;
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
-    ImageOptions_t imageOptions;
+    ImageDisplayOptions_t baseImageOptions;
+    ImageDetails_t currentImage;
     bool debugMode = false;
 
     Overlay* overlay;

@@ -21,16 +21,15 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_pt
 
 void ImageSwitcher::updateImage()
 {
-    ImageOptions_t options;
-    std::string filename(selector->getNextImage(options));
-    if (filename == "")
+    ImageDetails_t imageDetails = selector->getNextImage(window.getBaseOptions());
+    if (imageDetails.filename == "")
     {
       window.warn("No image found.");
       timerNoContent.start(timeoutNoContent);
     }
     else
     {
-      window.setImage(filename, options);
+      window.setImage(imageDetails);
       timerNoContent.stop(); // we have loaded content so stop the fast polling
     }
 }

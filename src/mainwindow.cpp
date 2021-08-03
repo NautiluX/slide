@@ -108,16 +108,15 @@ void MainWindow::resizeEvent(QResizeEvent* event)
    updateImage(true);
 }
 
-void MainWindow::setImage(const std::string& path, const ImageOptions_t& options)
+void MainWindow::setImage(const ImageDetails_t &imageDetails)
 {
-    currentImage = path;
-    imageOptions = options;
+    currentImage = imageDetails;
     updateImage(false);
 }
 
 void MainWindow::updateImage(bool immediately)
 {
-    if (currentImage == "")
+    if (currentImage.filename == "")
       return;
 
     QLabel *label = this->findChild<QLabel*>("image");
@@ -129,7 +128,7 @@ void MainWindow::updateImage(bool immediately)
       this->setPalette(palette);
     }
 
-    QPixmap p( currentImage.c_str() );
+    QPixmap p( currentImage.filename.c_str() );
     if(debugMode)
     {
       std::cout << "size:" << p.width() << "x" << p.height() << std::endl;
@@ -142,10 +141,10 @@ void MainWindow::updateImage(bool immediately)
     
     if (overlay != NULL)
     {
-      drawText(background, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage).c_str(), Qt::AlignTop|Qt::AlignLeft);
-      drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage).c_str(), Qt::AlignTop|Qt::AlignRight);
-      drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage).c_str(), Qt::AlignBottom|Qt::AlignLeft);
-      drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage).c_str(), Qt::AlignBottom|Qt::AlignRight);
+      drawText(background, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage.filename).c_str(), Qt::AlignTop|Qt::AlignLeft);
+      drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage.filename).c_str(), Qt::AlignTop|Qt::AlignRight);
+      drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage.filename).c_str(), Qt::AlignBottom|Qt::AlignLeft);
+      drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage.filename).c_str(), Qt::AlignBottom|Qt::AlignRight);
       if (debugMode)
       {
         // draw a thumbnail version of the source image in the bottom left, to check for cropping issues
@@ -207,7 +206,7 @@ void MainWindow::setOverlay(Overlay* o)
 
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
 {
-    if (imageOptions.fitAspectAxisToWindow) {
+    if (currentImage.options.fitAspectAxisToWindow) {
       // our scaled version will just fill the whole screen, us it directly
       return scaled.copy();
     } else if (scaled.width() < width()) {
@@ -225,21 +224,21 @@ QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPix
 QPixmap MainWindow::getRotatedPixmap(const QPixmap& p)
 {
     QMatrix matrix;
-    matrix.rotate(imageOptions.rotation);
+    matrix.rotate(currentImage.rotation);
     return p.transformed(matrix);
 }
 
 QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
-  if (imageOptions.fitAspectAxisToWindow)
+  if (currentImage.options.fitAspectAxisToWindow)
   {
-    if (imageOptions.aspect == 'p')
+    if (currentImage.aspect == EImageAspect_Portrait)
     {
       // potrait mode, make height of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToHeight(height(), Qt::SmoothTransformation);
       return pTemp.copy(0,0,width(),height());
     }
-    else if (imageOptions.aspect == 'l')
+    else if (currentImage.aspect == EImageAspect_Landscape)
     {
       // landscape mode, make width of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToWidth(width(), Qt::SmoothTransformation);

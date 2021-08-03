@@ -25,7 +25,7 @@ QStringList PathTraverser::getImageFormats() const {
   return imageFormats;
 }
 
-void PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, ImageOptions_t &options) const
+void PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, ImageDisplayOptions_t &options) const
 {
   QDir directory(directoryPath.c_str());
   QString jsonFile = directory.filePath(QString("options.json"));
@@ -79,7 +79,7 @@ const std::string RecursivePathTraverser::getImagePath(const std::string image) 
   return image;
 }
 
-void RecursivePathTraverser::UpdateOptionsForImage(const std::string& filename, ImageOptions_t& options) const
+void RecursivePathTraverser::UpdateOptionsForImage(const std::string& filename, ImageDisplayOptions_t& options) const
 {
   QDir d = QFileInfo(filename.c_str()).absoluteDir();
   LoadOptionsForDirectory(d.absolutePath().toStdString(), options);
@@ -103,7 +103,7 @@ const std::string DefaultPathTraverser::getImagePath(const std::string image) co
   return directory.filePath(QString(image.c_str())).toStdString();
 }
 
-void DefaultPathTraverser::UpdateOptionsForImage(const std::string& filename, ImageOptions_t& options) const
+void DefaultPathTraverser::UpdateOptionsForImage(const std::string& filename, ImageDisplayOptions_t& options) const
 {
   UNUSED(filename);
   LoadOptionsForDirectory(directory.absolutePath().toStdString(), options);
@@ -129,7 +129,7 @@ const std::string ImageListPathTraverser::getImagePath(const std::string image) 
   return image;
 }
 
-void ImageListPathTraverser::UpdateOptionsForImage(const std::string& filename, ImageOptions_t& options) const
+void ImageListPathTraverser::UpdateOptionsForImage(const std::string& filename, ImageDisplayOptions_t& options) const
 {
   // no per file options modification supported
   UNUSED(filename);

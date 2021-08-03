@@ -4,41 +4,33 @@
 #include <iostream>
 #include <memory>
 #include <QStringList>
+#include "imagestructs.h"
 
 class MainWindow;
 class PathTraverser;
 
-struct ImageOptions_t
-{
-    char aspect;
-    bool fitAspectAxisToWindow;
-    int rotation;
-};
-
 class ImageSelector
 {
 public:
-    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspectIn, bool fitAspectAxisToWindow);
+    ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
     virtual ~ImageSelector();
-    virtual const std::string getNextImage(ImageOptions_t &options) = 0;
+    virtual const ImageDetails_t getNextImage(const ImageDisplayOptions_t &baseOptions) = 0;
     void setDebugMode(bool debugModeIn) { debugMode = debugModeIn;}
 
 protected:
-    int getImageRotation(const std::string &fileName);
-    bool imageValidForAspect(const std::string &fileName, const int rotation);
-    bool imageMatchesFilter(const std::string& fileName, const int rotation);
+    void populateImageDetails(const std::string&filename, ImageDetails_t &imageDetails, const ImageDisplayOptions_t &baseOptions);
+    bool imageValidForAspect(const ImageDetails_t& imageDetails);
+    bool imageMatchesFilter(const ImageDetails_t& imageDetails);
     std::unique_ptr<PathTraverser>& pathTraverser;
-    char aspect;
-    bool fitAspectAxisToWindow = false;
     bool debugMode = false;
 };
 
 class RandomImageSelector : public ImageSelector
 {
 public:
-    RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow);
+    RandomImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
     virtual ~RandomImageSelector();
-    virtual const std::string getNextImage(ImageOptions_t &options);
+    virtual const ImageDetails_t getNextImage(const ImageDisplayOptions_t &baseOptions);
 
 private:
     unsigned int selectRandom(const QStringList& images) const;
@@ -47,9 +39,9 @@ private:
 class ShuffleImageSelector : public ImageSelector
 {
 public:
-    ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow);
+    ShuffleImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
     virtual ~ShuffleImageSelector();
-    virtual const std::string getNextImage(ImageOptions_t &options);
+    virtual const ImageDetails_t getNextImage(const ImageDisplayOptions_t &baseOptions);
 
 private:
     void reloadImagesIfNoneLeft();
@@ -60,9 +52,9 @@ private:
 class SortedImageSelector : public ImageSelector
 {
 public:
-    SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser, char aspect, bool fitAspectAxisToWindow);
+    SortedImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
     virtual ~SortedImageSelector();
-    virtual const std::string getNextImage(ImageOptions_t &options);
+    virtual const ImageDetails_t getNextImage(const ImageDisplayOptions_t &baseOptions);
 
 private:
     void reloadImagesIfEmpty();

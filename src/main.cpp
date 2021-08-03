@@ -31,8 +31,7 @@ int main(int argc, char *argv[])
   bool shuffle = false;
   bool sorted = false;
   bool debugMode = false;
-  char aspect = 'a';
-  bool fitAspectAxisToWindow = false;
+  ImageDisplayOptions_t baseDisplayOptions;
   std::string valid_aspects = "alp"; // all, landscape, portait
   std::string overlay = "";
   std::string imageList = ""; // comma delimited list of images to show
@@ -57,11 +56,26 @@ int main(int argc, char *argv[])
         path = optarg;
         break;
       case 'a':
-        aspect = optarg[0];
-        if ( valid_aspects.find(aspect) == std::string::npos )
+        if ( valid_aspects.find(optarg[0]) == std::string::npos )
         {
           std::cout << "Invalid Aspect option, defaulting to all" << std::endl;
-          aspect = 'a';
+          baseDisplayOptions.onlyAspect = EImageAspect_Any;
+        }
+        else
+        {
+          switch(optarg[0])
+          {
+            case 'l':
+              baseDisplayOptions.onlyAspect = EImageAspect_Landscape;
+              break;
+            case 'p':
+              baseDisplayOptions.onlyAspect = EImageAspect_Portrait;
+              break;
+            default:
+            case 'a':
+              baseDisplayOptions.onlyAspect = EImageAspect_Any;
+              break;
+          }
         }
         break;
       case 't':
@@ -103,7 +117,7 @@ int main(int argc, char *argv[])
   }
   if(stretchInt==1)
   {
-    fitAspectAxisToWindow = true;
+    baseDisplayOptions.fitAspectAxisToWindow = true;
   }
 
   if (path.empty() && imageList.empty())
@@ -130,15 +144,15 @@ int main(int argc, char *argv[])
   std::unique_ptr<ImageSelector> selector;
   if (sorted)
   {
-    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser, aspect, fitAspectAxisToWindow));
+    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
   }
   else if (shuffle)
   {
-    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser, aspect, fitAspectAxisToWindow));
+    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
   }
   else
   {
-    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser, aspect, fitAspectAxisToWindow));
+    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
   }
   selector->setDebugMode(debugMode);
   if(debugMode)
@@ -150,6 +164,7 @@ int main(int argc, char *argv[])
   o.setDebugMode(debugMode);
   w.setOverlay(&o);
   w.setDebugMode(debugMode);
+  w.setBaseOptions(baseDisplayOptions);
   w.show();
 
   ImageSwitcher switcher(w, rotationSeconds * 1000, selector);
