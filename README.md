@@ -26,11 +26,11 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
 * `-s` for shuffle instead of random image rotation
 * `-S` for sorted rotation (files ordered by name, first images then subfolders)
 * `rotation_seconds(default=30)`: time until next random image is chosen from the given folder
-* `aspect(default=a)`: the required aspect ratio of the picture to display. Valid values are 'a' (all), 'l' (landscape) and 'p' (portrait)
+* `aspect(default=a)`: the required aspect ratio of the picture to display. Valid values are 'a' (all), 'l' (landscape), 'p' (portrait) and 'm' (monitor). Monitor will match the aspect ratio of the display we are running on.
 * `background_opacity(default=150)`: opacity of the background filling image between 0 (black background) and 255
 * `blur_radius(default=20)`: blur radius of the background filling image
 * `-v` or `--verbose`: Verbose debug output when running, plus a thumbnail of the original image in the bottom left of the screen
-* `--stretch`: When in aspect mode 'l' or 'p' crop the image rather than leaving a blurred background. For example, in landscape mode this will make images as wide as the screen and crop the top and bottom to fit.
+* `--stretch`: When in aspect mode 'l','p' or 'm' crop the image rather than leaving a blurred background. For example, in landscape mode this will make images as wide as the screen and crop the top and bottom to fit.
 * `-O` is used to create a overlay string.
   * It defines overlays for all four edges in the order `top-left;top-right;bottom-left;bottom-right`
   * All edges overlays are separated by `;`
