@@ -24,15 +24,15 @@ public:
     bool event(QEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     ~MainWindow();
-    void setImage(const ImageDetails_t &imageDetails);
+    void setImage(const ImageDetails &imageDetails);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
     void setOverlay(Overlay* overlay);
-    void setDebugMode(bool debugModeIn) {debugMode = debugModeIn;}
-    void setBaseOptions(const ImageDisplayOptions_t &baseOptionsIn);
-    const ImageDisplayOptions_t &getBaseOptions() { return baseImageOptions; }
-    void setImageSwitcher(ImageSwitcher *switcherIn) { switcher = switcherIn; }
+    void setDebugMode(bool debugModeIn);
+    void setBaseOptions(const ImageDisplayOptions &baseOptionsIn);
+    const ImageDisplayOptions &getBaseOptions();
+    void setImageSwitcher(ImageSwitcher *switcherIn);
 public slots:
     void checkWindowSize();
 private:
@@ -40,9 +40,9 @@ private:
 
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
-    ImageDisplayOptions_t baseImageOptions;
+    ImageDisplayOptions baseImageOptions;
     bool imageAspectMatchesMonitor = false;
-    ImageDetails_t currentImage;
+    ImageDetails currentImage;
     bool debugMode = false;
     QSize lastScreenSize = {0,0};
 

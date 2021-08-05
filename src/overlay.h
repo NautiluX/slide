@@ -27,7 +27,7 @@ class Overlay
     int getMarginBottomRight();
     int getFontsizeBottomRight();
 
-    void setDebugMode(const bool debugModeIn) { debugMode = debugModeIn; }
+    void setDebugMode(const bool debugModeIn);
 
   private:
     const std::string overlayInput;

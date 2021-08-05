@@ -19,6 +19,11 @@ Overlay::Overlay(const std::string overlayInput):
 
 Overlay::~Overlay() {}
 
+void Overlay::setDebugMode(const bool debugModeIn) 
+{ 
+  debugMode = debugModeIn; 
+}
+
 void Overlay::parseInput() {
   QString str = QString(overlayInput.c_str());
   QStringList corners = str.split(QLatin1Char(';'));

@@ -113,7 +113,7 @@ void MainWindow::resizeEvent(QResizeEvent* event)
   bool isLandscape = screenSize.width() > screenSize.height();
   if (imageAspectMatchesMonitor)
   {
-    baseImageOptions.onlyAspect = isLandscape ? EImageAspect_Landscape : EImageAspect_Portrait; 
+    baseImageOptions.onlyAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait; 
   }
   if(debugMode)
   {
@@ -143,7 +143,7 @@ void MainWindow::checkWindowSize()
 }
 
 
-void MainWindow::setImage(const ImageDetails_t &imageDetails)
+void MainWindow::setImage(const ImageDetails &imageDetails)
 {
     currentImage = imageDetails;
     updateImage(false);
@@ -268,13 +268,13 @@ QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
   if (currentImage.options.fitAspectAxisToWindow)
   {
-    if (currentImage.aspect == EImageAspect_Portrait)
+    if (currentImage.aspect == ImageAspect_Portrait)
     {
       // potrait mode, make height of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToHeight(height(), Qt::SmoothTransformation);
       return pTemp.copy(0,0,width(),height());
     }
-    else if (currentImage.aspect == EImageAspect_Landscape)
+    else if (currentImage.aspect == ImageAspect_Landscape)
     {
       // landscape mode, make width of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToWidth(width(), Qt::SmoothTransformation);
@@ -339,12 +339,27 @@ void MainWindow::warn(std::string text)
   label->setText(text.c_str());
 }
 
-void MainWindow::setBaseOptions(const ImageDisplayOptions_t &baseOptionsIn) 
+void MainWindow::setBaseOptions(const ImageDisplayOptions &baseOptionsIn) 
 { 
   baseImageOptions = baseOptionsIn; 
-  if(baseImageOptions.onlyAspect == EImageAspect_Monitor)
+  if(baseImageOptions.onlyAspect == ImageAspect_Monitor)
   {
     imageAspectMatchesMonitor = true;
-    baseImageOptions.onlyAspect = width() >= height() ? EImageAspect_Landscape : EImageAspect_Portrait;
+    baseImageOptions.onlyAspect = width() >= height() ? ImageAspect_Landscape : ImageAspect_Portrait;
   }
+}
+
+void MainWindow::setImageSwitcher(ImageSwitcher *switcherIn)
+{
+   switcher = switcherIn; 
+}
+
+void MainWindow::setDebugMode(bool debugModeIn) 
+{
+  debugMode = debugModeIn;
+}
+
+const ImageDisplayOptions &MainWindow::getBaseOptions() 
+{
+   return baseImageOptions; 
 }

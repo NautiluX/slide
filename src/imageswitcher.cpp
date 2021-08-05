@@ -21,7 +21,7 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_pt
 
 void ImageSwitcher::updateImage()
 {
-    ImageDetails_t imageDetails = selector->getNextImage(window.getBaseOptions());
+    ImageDetails imageDetails = selector->getNextImage(window.getBaseOptions());
     if (imageDetails.filename == "")
     {
       window.warn("No image found.");

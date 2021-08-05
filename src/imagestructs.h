@@ -4,24 +4,24 @@
 #include <string>
 
 // possible aspect ratios of an image
-enum EImageAspect { EImageAspect_Landscape = 0, EImageAspect_Portrait, EImageAspect_Any, EImageAspect_Monitor /* match monitors aspect */ };
+enum ImageAspect { ImageAspect_Landscape = 0, ImageAspect_Portrait, ImageAspect_Any, ImageAspect_Monitor /* match monitors aspect */ };
 
 // options to consider when displaying an image
-struct ImageDisplayOptions_t
+struct ImageDisplayOptions
 {
-    EImageAspect onlyAspect = EImageAspect_Any;
+    ImageAspect onlyAspect = ImageAspect_Any;
     bool fitAspectAxisToWindow = false;
 };
 
 // details of a particular image
-struct ImageDetails_t
+struct ImageDetails
 {
     int width = 0;
     int height = 0;
     int rotation = 0;
-    EImageAspect aspect = EImageAspect_Any;
+    ImageAspect aspect = ImageAspect_Any;
     std::string filename;
-    ImageDisplayOptions_t options;
+    ImageDisplayOptions options;
 };
 
 

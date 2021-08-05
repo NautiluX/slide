@@ -19,6 +19,11 @@ ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser):
 
 ImageSelector::~ImageSelector(){}
 
+void ImageSelector::setDebugMode(bool debugModeIn) 
+{ 
+  debugMode = debugModeIn;
+}
+
 int ReadExifTag(ExifData* exifData, ExifTag tag, bool shortRead = false)
 {
   int value = -1;
@@ -39,8 +44,9 @@ int ReadExifTag(ExifData* exifData, ExifTag tag, bool shortRead = false)
   return value;
 }
 
-void ImageSelector::populateImageDetails(const std::string&fileName, ImageDetails_t &imageDetails, const ImageDisplayOptions_t &baseOptions)
+ImageDetails ImageSelector::populateImageDetails(const std::string&fileName, const ImageDisplayOptions &baseOptions)
 {
+  ImageDetails imageDetails;
   int orientation = -1;
   int imageWidth = -1;
   int imageHeight = -1;
@@ -99,16 +105,17 @@ void ImageSelector::populateImageDetails(const std::string&fileName, ImageDetail
   imageDetails.height = imageHeight;
   imageDetails.rotation = degrees;
   if (imageWidth > imageHeight) {
-    imageDetails.aspect = EImageAspect_Landscape;
+    imageDetails.aspect = ImageAspect_Landscape;
   } else if (imageHeight > imageWidth) {
-    imageDetails.aspect = EImageAspect_Portrait;
+    imageDetails.aspect = ImageAspect_Portrait;
   } else {
-    imageDetails.aspect = EImageAspect_Any;
+    imageDetails.aspect = ImageAspect_Any;
   }
   imageDetails.options = baseOptions;
+  return imageDetails;
 }
 
-bool ImageSelector::imageMatchesFilter(const ImageDetails_t& imageDetails)
+bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
 {
   if(!QFileInfo::exists(QString(imageDetails.filename.c_str())))
   {
@@ -131,9 +138,9 @@ bool ImageSelector::imageMatchesFilter(const ImageDetails_t& imageDetails)
   return true;
 }
 
-bool ImageSelector::imageValidForAspect(const ImageDetails_t& imageDetails)
+bool ImageSelector::imageValidForAspect(const ImageDetails& imageDetails)
 {
-  if (imageDetails.options.onlyAspect == EImageAspect_Any ||
+  if (imageDetails.options.onlyAspect == ImageAspect_Any ||
       imageDetails.aspect == imageDetails.options.onlyAspect)
   {
     return true;
@@ -150,18 +157,18 @@ RandomImageSelector::RandomImageSelector(std::unique_ptr<PathTraverser>& pathTra
 
 RandomImageSelector::~RandomImageSelector(){}
 
-const ImageDetails_t RandomImageSelector::getNextImage(const ImageDisplayOptions_t &baseOptions)
+const ImageDetails RandomImageSelector::getNextImage(const ImageDisplayOptions &baseOptions)
 {
-  ImageDetails_t imageDetails;
+  ImageDetails imageDetails;
   try
   {
     QStringList images = pathTraverser->getImages();
     unsigned int selectedImage = selectRandom(images);
-    populateImageDetails(pathTraverser->getImagePath(images.at(selectedImage).toStdString()), imageDetails, baseOptions);
+    imageDetails = populateImageDetails(pathTraverser->getImagePath(images.at(selectedImage).toStdString()), baseOptions);
     while(!imageMatchesFilter(imageDetails))
     {
       unsigned int selectedImage = selectRandom(images);
-      populateImageDetails(pathTraverser->getImagePath(images.at(selectedImage).toStdString()), imageDetails, baseOptions);
+      imageDetails = populateImageDetails(pathTraverser->getImagePath(images.at(selectedImage).toStdString()), baseOptions);
     }
   }
   catch(const std::string& err) 
@@ -169,7 +176,7 @@ const ImageDetails_t RandomImageSelector::getNextImage(const ImageDisplayOptions
     std::cerr << "Error: " << err << std::endl;
   }
   std::cout << "updating image: " << imageDetails.filename << std::endl;
-  pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
+  imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
   return imageDetails;
 }
 
@@ -198,23 +205,23 @@ ShuffleImageSelector::~ShuffleImageSelector()
 {
 }
 
-const ImageDetails_t ShuffleImageSelector::getNextImage(const ImageDisplayOptions_t &baseOptions)
+const ImageDetails ShuffleImageSelector::getNextImage(const ImageDisplayOptions &baseOptions)
 {
   reloadImagesIfNoneLeft();
-  ImageDetails_t imageDetails;
+  ImageDetails imageDetails;
   if (images.size() == 0)
   {
     return imageDetails;
   }
-  populateImageDetails(pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString()), imageDetails, baseOptions);
+  imageDetails = populateImageDetails(pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString()), baseOptions);
   current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
   while(!imageMatchesFilter(imageDetails)) {
     reloadImagesIfNoneLeft();
-    populateImageDetails(pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString()), imageDetails,baseOptions);
+    imageDetails = populateImageDetails(pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString()),baseOptions);
     current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
   }
   std::cout << "updating image: " << imageDetails.filename << std::endl;
-  pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
+  imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
   return imageDetails;
 }
 
@@ -254,22 +261,22 @@ bool operator<(const QString& lhs, const QString& rhs) noexcept{
 
 }
 
-const ImageDetails_t SortedImageSelector::getNextImage(const ImageDisplayOptions_t &baseOptions)
+const ImageDetails SortedImageSelector::getNextImage(const ImageDisplayOptions &baseOptions)
 {
   reloadImagesIfEmpty();
-  ImageDetails_t imageDetails;
+  ImageDetails imageDetails;
   if (images.size() == 0)
   {
     return imageDetails;
   }
-  populateImageDetails(pathTraverser->getImagePath(images.takeFirst().toStdString()), imageDetails, baseOptions);
+  imageDetails = populateImageDetails(pathTraverser->getImagePath(images.takeFirst().toStdString()), baseOptions);
   while(!imageMatchesFilter(imageDetails)) {
     reloadImagesIfEmpty();
-    populateImageDetails(pathTraverser->getImagePath(images.takeFirst().toStdString()), imageDetails, baseOptions);
+    imageDetails = populateImageDetails(pathTraverser->getImagePath(images.takeFirst().toStdString()), baseOptions);
   }
 
   std::cout << "updating image: " << imageDetails.filename << std::endl;
-  pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
+  imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
   return imageDetails;
 }
 

@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
   bool shuffle = false;
   bool sorted = false;
   bool debugMode = false;
-  ImageDisplayOptions_t baseDisplayOptions;
+  ImageDisplayOptions baseDisplayOptions;
   std::string valid_aspects = "alpm"; // all, landscape, portait
   std::string overlay = "";
   std::string imageList = ""; // comma delimited list of images to show
@@ -59,24 +59,24 @@ int main(int argc, char *argv[])
         if ( valid_aspects.find(optarg[0]) == std::string::npos )
         {
           std::cout << "Invalid Aspect option, defaulting to all" << std::endl;
-          baseDisplayOptions.onlyAspect = EImageAspect_Any;
+          baseDisplayOptions.onlyAspect = ImageAspect_Any;
         }
         else
         {
           switch(optarg[0])
           {
             case 'l':
-              baseDisplayOptions.onlyAspect = EImageAspect_Landscape;
+              baseDisplayOptions.onlyAspect = ImageAspect_Landscape;
               break;
             case 'p':
-              baseDisplayOptions.onlyAspect = EImageAspect_Portrait;
+              baseDisplayOptions.onlyAspect = ImageAspect_Portrait;
               break;
             case 'm':
-              baseDisplayOptions.onlyAspect = EImageAspect_Monitor;
+              baseDisplayOptions.onlyAspect = ImageAspect_Monitor;
               break;
             default:
             case 'a':
-              baseDisplayOptions.onlyAspect = EImageAspect_Any;
+              baseDisplayOptions.onlyAspect = ImageAspect_Any;
               break;
           }
         }

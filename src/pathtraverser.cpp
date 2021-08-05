@@ -25,8 +25,9 @@ QStringList PathTraverser::getImageFormats() const {
   return imageFormats;
 }
 
-void PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, ImageDisplayOptions_t &options) const
+ImageDisplayOptions PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, const ImageDisplayOptions &baseOptions) const
 {
+  ImageDisplayOptions options = baseOptions;
   QDir directory(directoryPath.c_str());
   QString jsonFile = directory.filePath(QString("options.json"));
   if(directory.exists(jsonFile))
@@ -52,6 +53,7 @@ void PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, Im
       }
     }
   }
+  return options;
 }
 
 RecursivePathTraverser::RecursivePathTraverser(const std::string path,bool debugMode):
@@ -78,10 +80,10 @@ const std::string RecursivePathTraverser::getImagePath(const std::string image) 
   return image;
 }
 
-void RecursivePathTraverser::UpdateOptionsForImage(const std::string& filename, ImageDisplayOptions_t& options) const
+ImageDisplayOptions RecursivePathTraverser::UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const
 {
   QDir d = QFileInfo(filename.c_str()).absoluteDir();
-  LoadOptionsForDirectory(d.absolutePath().toStdString(), options);
+  return LoadOptionsForDirectory(d.absolutePath().toStdString(), baseOptions);
 }
 
 DefaultPathTraverser::DefaultPathTraverser(const std::string path,bool debugMode):
@@ -102,10 +104,10 @@ const std::string DefaultPathTraverser::getImagePath(const std::string image) co
   return directory.filePath(QString(image.c_str())).toStdString();
 }
 
-void DefaultPathTraverser::UpdateOptionsForImage(const std::string& filename, ImageDisplayOptions_t& options) const
+ImageDisplayOptions DefaultPathTraverser::UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const
 {
   UNUSED(filename);
-  LoadOptionsForDirectory(directory.absolutePath().toStdString(), options);
+  return LoadOptionsForDirectory(directory.absolutePath().toStdString(), baseOptions);
 }
 
 ImageListPathTraverser::ImageListPathTraverser(const std::string &imageListString,bool debugMode):
@@ -128,9 +130,10 @@ const std::string ImageListPathTraverser::getImagePath(const std::string image) 
   return image;
 }
 
-void ImageListPathTraverser::UpdateOptionsForImage(const std::string& filename, ImageDisplayOptions_t& options) const
+ImageDisplayOptions ImageListPathTraverser::UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const
 {
   // no per file options modification supported
   UNUSED(filename);
-  UNUSED(options);
+  UNUSED(baseOptions);
+  return ImageDisplayOptions();
 }
