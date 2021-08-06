@@ -14,6 +14,7 @@ class ImageSwitcher : public QObject
 public:
     ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_ptr<ImageSelector>& selector);
     void start();
+    void scheduleImageUpdate();
 
 public slots:
     void updateImage();

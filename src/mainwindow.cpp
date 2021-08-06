@@ -118,31 +118,7 @@ bool MainWindow::event(QEvent* event)
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
   QMainWindow::resizeEvent(event);
-  // the window size in this event may not match the monitor size, so use QGuiApplication to find the true monitor size
-  QScreen *screen = QGuiApplication::primaryScreen();
-  if (screen != nullptr)
-  {
-    QSize screenSize = screen->geometry().size();
-    bool isLandscape = screenSize.width() > screenSize.height();
-    if (imageAspectMatchesMonitor)
-    {
-      baseImageOptions.onlyAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait; 
-    }
-    if(debugMode)
-    {
-      std::cout << "Got resize:" << this << " " << screenSize.width() << "," << screenSize.height() << " , is landscape? " << (isLandscape ? "y" : "n") << std::endl;
-    }
-    updateImage(true);
-    if(lastScreenSize != screenSize && switcher != nullptr)
-    {
-      lastScreenSize = screenSize;
-      if(debugMode)
-      {
-        std::cout << "Updating image due to resize" << std::endl;
-      }
-      switcher->updateImage();
-    }
-  }
+  updateImage(true);
 }
 
 void MainWindow::checkWindowSize()
@@ -158,6 +134,29 @@ void MainWindow::checkWindowSize()
         std::cout << "Resizing Window" << screenSize.width() << "," << screenSize.height() << std::endl;
       }
       setFixedSize(screenSize);
+      updateImage(true);
+    }
+
+    if (imageAspectMatchesMonitor)
+    {
+      bool isLandscape = screenSize.width() > screenSize.height();
+      ImageAspect newAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait;
+      if (newAspect != baseImageOptions.onlyAspect)
+      {
+        if(debugMode)
+        {
+          std::cout << "Changing image orientation to " << newAspect << std::endl;
+        }
+        baseImageOptions.onlyAspect = newAspect;
+        currentImage.filename = "";
+        warn("Monitor aspect changed, updating image...");
+        repaint(); // force an immediate redraw as we might block for a while loading the next image
+        if (switcher != nullptr)
+        {
+          // pick a new image as our aspect changed, we can't just resize the image
+          switcher->scheduleImageUpdate();
+        }
+      }
     }
   }
 }

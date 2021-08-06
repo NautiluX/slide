@@ -41,3 +41,9 @@ void ImageSwitcher::start()
     connect(&timerNoContent, SIGNAL(timeout()), this, SLOT(updateImage()));
     timer.start(timeout);
 }
+
+void ImageSwitcher::scheduleImageUpdate()
+{
+  // update our image in 100msec, to let the system settle
+  QTimer::singleShot(100, this, SLOT(updateImage())); 
+}
