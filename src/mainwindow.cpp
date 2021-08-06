@@ -15,7 +15,8 @@
 #include <QRect>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
-#include <QDesktopWidget>
+#include <QApplication>
+#include <QScreen>
 #include <sstream>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -34,6 +35,16 @@ MainWindow::MainWindow(QWidget *parent) :
     label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
     update();
 
+    QScreen* screen = QGuiApplication::primaryScreen();
+    if (screen)
+    {
+      connect(screen, SIGNAL(geometryChanged(QRect)), this, SLOT(checkWindowSize()));
+      connect(screen, SIGNAL(orientationChanged(Qt::ScreenOrientation)), this, SLOT(checkWindowSize()));
+      screen->setOrientationUpdateMask(Qt::LandscapeOrientation |
+                                      Qt::PortraitOrientation |
+                                      Qt::InvertedLandscapeOrientation |
+                                      Qt::InvertedPortraitOrientation);
+    }
 }
 
 MainWindow::~MainWindow()
@@ -107,38 +118,47 @@ bool MainWindow::event(QEvent* event)
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
   QMainWindow::resizeEvent(event);
-  // the window size in this event may not match the monitor size, so use QDesktopWidget to find the true monitor size
-  QDesktopWidget desktop;
-  QSize screenSize = desktop.screenGeometry(this).size();
-  bool isLandscape = screenSize.width() > screenSize.height();
-  if (imageAspectMatchesMonitor)
+  // the window size in this event may not match the monitor size, so use QGuiApplication to find the true monitor size
+  QScreen *screen = QGuiApplication::primaryScreen();
+  if (screen != nullptr)
   {
-    baseImageOptions.onlyAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait; 
-  }
-  if(debugMode)
-  {
-    std::cout << "Got resize:" << this << " " << screenSize.width() << "," << screenSize.height() << " , is landscape? " << (isLandscape ? "y" : "n") << std::endl;
-  }
-  updateImage(true);
-  QTimer::singleShot(5, this, SLOT(checkWindowSize()));
-  if(lastScreenSize != screenSize && switcher != nullptr)
-  {
-    lastScreenSize = screenSize;
-    switcher->updateImage();
+    QSize screenSize = screen->geometry().size();
+    bool isLandscape = screenSize.width() > screenSize.height();
+    if (imageAspectMatchesMonitor)
+    {
+      baseImageOptions.onlyAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait; 
+    }
+    if(debugMode)
+    {
+      std::cout << "Got resize:" << this << " " << screenSize.width() << "," << screenSize.height() << " , is landscape? " << (isLandscape ? "y" : "n") << std::endl;
+    }
+    updateImage(true);
+    if(lastScreenSize != screenSize && switcher != nullptr)
+    {
+      lastScreenSize = screenSize;
+      if(debugMode)
+      {
+        std::cout << "Updating image due to resize" << std::endl;
+      }
+      switcher->updateImage();
+    }
   }
 }
 
 void MainWindow::checkWindowSize()
 {
-  QDesktopWidget desktop;
-  QRect screenSize = desktop.screenGeometry(this);
-  if(size() != screenSize.size())
+  QScreen *screen = QGuiApplication::primaryScreen();
+  if (screen != nullptr)
   {
-    if(debugMode)
+    QSize screenSize = screen->geometry().size();
+    if(size() != screenSize)
     {
-      std::cout << "Resizing Window" << screenSize.width() << "," << screenSize.height() << std::endl;
+      if(debugMode)
+      {
+        std::cout << "Resizing Window" << screenSize.width() << "," << screenSize.height() << std::endl;
+      }
+      setFixedSize(screenSize);
     }
-    setFixedSize(screenSize.size());
   }
 }
 
