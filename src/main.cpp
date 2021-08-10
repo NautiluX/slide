@@ -4,6 +4,11 @@
 #include "pathtraverser.h"
 #include "overlay.h"
 #include <QApplication>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QDateTime>
+#include <QFileInfo>
 #include <iostream>
 #include <sys/file.h>
 #include <errno.h>
@@ -15,18 +20,15 @@
 #include <memory>
 
 void usage(std::string programName) {
-    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch]" << std::endl;
+    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
 }
 
-int main(int argc, char *argv[])
-{
-  unsigned int rotationSeconds = 30;
+struct Config {
   std::string path = "";
-
-  QApplication a(argc, argv);
-
-  MainWindow w;
-  int opt;
+  std::string configPath = "";
+  unsigned int rotationSeconds = 30;
+  int blurRadius = -1;
+  int backgroundOpacity = -1;
   bool recursive = false;
   bool shuffle = false;
   bool sorted = false;
@@ -35,6 +37,134 @@ int main(int argc, char *argv[])
   std::string valid_aspects = "alpm"; // all, landscape, portait
   std::string overlay = "";
   std::string imageList = ""; // comma delimited list of images to show
+  QDateTime loadTime;
+};
+
+ImageAspect parseAspectFromString(char aspect) {
+  switch(aspect)
+  {
+    case 'l':
+      return ImageAspect_Landscape;
+      break;
+    case 'p':
+      return ImageAspect_Portrait;
+      break;
+    case 'm':
+      return ImageAspect_Monitor;
+      break;
+    default:
+    case 'a':
+      return ImageAspect_Any;
+      break;
+  }
+}
+
+std::string ParseJSONString(QJsonObject jsonDoc, const char *key) {
+  if(jsonDoc.contains(key) && jsonDoc[key].isString())
+  {
+   return jsonDoc[key].toString().toStdString();
+  }
+  return "";
+}
+
+void SetJSONBool(bool &value, QJsonObject jsonDoc, const char *key) {
+  if(jsonDoc.contains(key) && jsonDoc[key].isBool())
+  {
+    value = jsonDoc[key].toBool();
+  }
+}
+
+QString getConfigFilePath(const std::string &configPath) {
+  std::string userConfigFolder = "~/.config/slide/";
+  std::string systemConfigFolder = "/etc/slide";
+  QString baseConfigFilename("slide.options.json");
+  
+  QDir directory(userConfigFolder.c_str());
+  QString jsonFile = "";
+  if (!configPath.empty())
+  { 
+    directory.setPath(configPath.c_str());
+    jsonFile = directory.filePath(baseConfigFilename);    
+  }
+   if(!directory.exists(jsonFile))
+  { 
+    directory.setPath(userConfigFolder.c_str());
+    jsonFile = directory.filePath(baseConfigFilename);    
+  }
+  if(!directory.exists(jsonFile))
+  {
+    directory.setPath(systemConfigFolder.c_str());
+    jsonFile = directory.filePath(baseConfigFilename);
+  }
+
+  if(directory.exists(jsonFile))
+  {
+    return jsonFile;
+  }
+
+  return "";
+}
+
+Config loadConfiguration(const Config &commandLineConfig) {
+  QString jsonFile = getConfigFilePath(commandLineConfig.configPath);
+  QDir directory;
+  if(!directory.exists(jsonFile))
+  {
+    return commandLineConfig; // nothing to load
+  }
+
+  Config userConfig = commandLineConfig;
+
+  if(userConfig.debugMode)
+  {
+    std::cout << "Found options file: " << jsonFile.toStdString() << std::endl;
+  }
+
+  QString val;
+  QFile file;
+  file.setFileName(jsonFile);
+  file.open(QIODevice::ReadOnly | QIODevice::Text);
+  val = file.readAll();
+  file.close();
+  QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
+  QJsonObject jsonDoc = d.object();
+  SetJSONBool(userConfig.baseDisplayOptions.fitAspectAxisToWindow, jsonDoc, "fitAspectAxisToWindow");
+  SetJSONBool(userConfig.recursive, jsonDoc, "recursive");
+  SetJSONBool(userConfig.shuffle, jsonDoc, "shuffle");
+  SetJSONBool(userConfig.debugMode, jsonDoc, "debug");
+
+  std::string aspectString = ParseJSONString(jsonDoc, "aspect");
+  if(!aspectString.empty())
+  {
+    userConfig.baseDisplayOptions.onlyAspect = parseAspectFromString(aspectString[0]);
+  }
+  if(jsonDoc.contains("rotationSeconds") && jsonDoc["rotationSeconds"].isDouble())
+  {
+    userConfig.rotationSeconds = (int)jsonDoc["rotationSeconds"].toDouble();
+  }
+
+  if(jsonDoc.contains("opacity") && jsonDoc["opacity"].isDouble())
+  {
+    userConfig.backgroundOpacity = (int)jsonDoc["opacity"].toDouble();
+  }
+
+  std::string overlayString = ParseJSONString(jsonDoc, "overlay");
+  if(!overlayString.empty())
+  {
+    userConfig.overlay = overlayString;
+  }
+  std::string pathString = ParseJSONString(jsonDoc, "path");
+  if(!pathString.empty())
+  {
+    userConfig.path = pathString;
+  }
+
+  userConfig.loadTime = QDateTime::currentDateTime();
+  return userConfig;
+}
+
+bool parseCommandLine(Config &appConfig, int argc, char *argv[]) {
+  int opt;
   int debugInt = 0;
   int stretchInt = 0;
   static struct option long_options[] =
@@ -43,135 +173,171 @@ int main(int argc, char *argv[])
     {"stretch", no_argument,       &stretchInt, 1},
   };
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:i:rsSv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:i:c:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 0:
           /* If this option set a flag, do nothing else now. */
           if (long_options[option_index].flag != 0)
             break;
-          usage(argv[0]);
-          return 1;
+          return false;
           break;
       case 'p':
-        path = optarg;
+        appConfig.path = optarg;
         break;
       case 'a':
-        if ( valid_aspects.find(optarg[0]) == std::string::npos )
+        if (appConfig.valid_aspects.find(optarg[0]) == std::string::npos)
         {
           std::cout << "Invalid Aspect option, defaulting to all" << std::endl;
-          baseDisplayOptions.onlyAspect = ImageAspect_Any;
+          appConfig.baseDisplayOptions.onlyAspect = ImageAspect_Any;
         }
         else
         {
-          switch(optarg[0])
-          {
-            case 'l':
-              baseDisplayOptions.onlyAspect = ImageAspect_Landscape;
-              break;
-            case 'p':
-              baseDisplayOptions.onlyAspect = ImageAspect_Portrait;
-              break;
-            case 'm':
-              baseDisplayOptions.onlyAspect = ImageAspect_Monitor;
-              break;
-            default:
-            case 'a':
-              baseDisplayOptions.onlyAspect = ImageAspect_Any;
-              break;
-          }
+          appConfig.baseDisplayOptions.onlyAspect = parseAspectFromString(optarg[0]);
         }
         break;
       case 't':
-        rotationSeconds = atoi(optarg);
+        appConfig.rotationSeconds = atoi(optarg);
         break;
       case 'b':
-        w.setBlurRadius(atoi(optarg));
+        appConfig.blurRadius = atoi(optarg);
         break;
       case 'o':
-        w.setBackgroundOpacity(atoi(optarg));
+        appConfig.backgroundOpacity = atoi(optarg);
         break;
       case 'r':
-        recursive = true;
+        appConfig.recursive = true;
         break;
       case 's':
-        shuffle = true;
+        appConfig.shuffle = true;
         std::cout << "Shuffle mode is on." << std::endl;
         break;
       case 'S':
-        sorted = true;
+        appConfig.sorted = true;
         break;
       case 'O':
-        overlay = optarg;
+        appConfig.overlay = optarg;
         break;
       case 'v':
-        debugMode = true;
+        appConfig.debugMode = true;
         break;
       case 'i':
-        imageList = optarg;
+        appConfig.imageList = optarg;
+        break;
+      case 'c':
+        appConfig.configPath = optarg;
         break;
       default: /* '?' */
-        usage(argv[0]);
-        return 1;
+        return false;
     }
   }
+  
   if(debugInt==1)
   {
-    debugMode = true;
+    appConfig.debugMode = true;
   }
   if(stretchInt==1)
   {
-    baseDisplayOptions.fitAspectAxisToWindow = true;
+    appConfig.baseDisplayOptions.fitAspectAxisToWindow = true;
   }
 
-  if (path.empty() && imageList.empty())
+  return true;
+}
+
+void ReloadConfigIfNeeded(Config &appConfig, MainWindow &w, ImageSwitcher &switcher, std::shared_ptr<ImageSelector> &selector)
+{  
+  QString jsonFile = getConfigFilePath(appConfig.configPath);
+  QDir directory;
+  if(!directory.exists(jsonFile))
+  {
+    return;
+  }
+
+  if(appConfig.loadTime <  QFileInfo(jsonFile).lastModified())
+  {
+    appConfig = loadConfiguration(appConfig);
+    w.setBaseOptions(appConfig.baseDisplayOptions);
+    w.setDebugMode(appConfig.debugMode);
+    selector->setDebugMode(appConfig.debugMode);
+    //Overlay o(appConfig.overlay);
+    //w.setOverlay(&o);
+    switcher.setRotationTime(appConfig.rotationSeconds * 1000);
+  }
+}
+
+int main(int argc, char *argv[])
+{
+  QApplication a(argc, argv);
+
+  MainWindow w;
+  Config commandLineAppConfig;
+  if (!parseCommandLine(commandLineAppConfig, argc, argv))
+  {
+    usage(argv[0]);
+    return 1;
+  }
+
+  Config appConfig = loadConfiguration(commandLineAppConfig);
+
+  if (appConfig.path.empty() && appConfig.imageList.empty())
   {
     std::cout << "Error: Path expected." << std::endl;
     usage(argv[0]);
     return 1;
   }
 
-  std::unique_ptr<PathTraverser> pathTraverser;
-  if (!imageList.empty())
+  if (appConfig.blurRadius>= 0)
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(imageList, debugMode));
-  }
-  else if (recursive)
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path, debugMode));
-  }
-  else
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path, debugMode));
+    w.setBlurRadius(appConfig.blurRadius);
   }
 
-  std::unique_ptr<ImageSelector> selector;
-  if (sorted)
+  if (appConfig.backgroundOpacity>= 0)
   {
-    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
+      w.setBackgroundOpacity(appConfig.backgroundOpacity);
   }
-  else if (shuffle)
+
+  std::unique_ptr<PathTraverser> pathTraverser;
+  if (!appConfig.imageList.empty())
   {
-    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(appConfig.imageList, appConfig.debugMode));
+  }
+  else if (appConfig.recursive)
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(appConfig.path, appConfig.debugMode));
   }
   else
   {
-    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
+    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(appConfig.path, appConfig.debugMode));
   }
-  selector->setDebugMode(debugMode);
-  if(debugMode)
+
+  std::shared_ptr<ImageSelector> selector;
+  if (appConfig.sorted)
   {
-    std::cout << "Rotation Time: " << rotationSeconds << std::endl;
-    std::cout << "Overlay input: " << overlay << std::endl;
+    selector = std::shared_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
   }
-  Overlay o(overlay);
-  o.setDebugMode(debugMode);
+  else if (appConfig.shuffle)
+  {
+    selector = std::shared_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
+  }
+  else
+  {
+    selector = std::shared_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
+  }
+  selector->setDebugMode(appConfig.debugMode);
+  if(appConfig.debugMode)
+  {
+    std::cout << "Rotation Time: " << appConfig.rotationSeconds << std::endl;
+    std::cout << "Overlay input: " << appConfig.overlay << std::endl;
+  }
+  Overlay o(appConfig.overlay);
+  o.setDebugMode(appConfig.debugMode);
   w.setOverlay(&o);
-  w.setDebugMode(debugMode);
-  w.setBaseOptions(baseDisplayOptions);
+  w.setBaseOptions(appConfig.baseDisplayOptions);
   w.show();
 
-  ImageSwitcher switcher(w, rotationSeconds * 1000, selector);
+  ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
   w.setImageSwitcher(&switcher);
+  std::function<void()> reloader = [&appConfig, &w, &switcher, &selector]() { ReloadConfigIfNeeded(appConfig, w, switcher, selector); };
+  switcher.setConfigFileReloader(reloader);
   switcher.start();
   return a.exec();
 }

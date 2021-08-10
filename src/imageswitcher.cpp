@@ -9,10 +9,10 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_ptr<ImageSelector>& selector):
+ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeoutMsec, std::shared_ptr<ImageSelector>& selector):
     QObject::QObject(),
     window(w),
-    timeout(timeout),
+    timeout(timeoutMsec),
     selector(selector),
     timer(this),
     timerNoContent(this)
@@ -21,6 +21,10 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_pt
 
 void ImageSwitcher::updateImage()
 {
+    if(reloadConfigIfNeeded)
+    {
+      reloadConfigIfNeeded();
+    }
     ImageDetails imageDetails = selector->getNextImage(window.getBaseOptions());
     if (imageDetails.filename == "")
     {
@@ -46,4 +50,15 @@ void ImageSwitcher::scheduleImageUpdate()
 {
   // update our image in 100msec, to let the system settle
   QTimer::singleShot(100, this, SLOT(updateImage())); 
+}
+
+void ImageSwitcher::setConfigFileReloader(std::function<void()> reloadConfigIfNeededIn)
+{
+  reloadConfigIfNeeded = reloadConfigIfNeededIn;
+}
+
+void ImageSwitcher::setRotationTime(unsigned int timeoutMsecIn)
+{
+  timeout = timeoutMsecIn;
+  timer.start(timeout);
 }
