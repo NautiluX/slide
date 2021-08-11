@@ -6,6 +6,7 @@ Tested versions:
  * Raspberry Pi 3 running Raspbian Stretch.
  * Raspberry Pi 3 running Raspbian Buster.
  * Raspberry Pi Zero running Raspbian Buster.
+ * Raspberry Pi 4B running Raspbian Buster.
 
 Screen background is filled with a scaled version of the image to prevent pure black background.
 
@@ -17,11 +18,13 @@ This project is maintained by myself during my spare time. If you like and use i
 ## Usage
 
 ```
-slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] [-p image_folder|-i imageFile,...] [-r] [-O overlay_string] [-v] [--verbose] [--stretch]
+slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] [-p image_folder|-i imageFile,...] [-r] [-O overlay_string] [-v] [--verbose] [--stretch] [-c path_to_config_json]
 ```
 
 * `image_folder`: where to search for images (.jpg files)
 * `-i imageFile,...`: comma delimited list of full paths to image files to display
+* `-c path_to_config_json`: the path to an optional slide.options.json file containing configuration parameters
+* `-t` how many seconds to display each picture for
 * `-r` for recursive traversal of `image_folder`
 * `-s` for shuffle instead of random image rotation
 * `-S` for sorted rotation (files ordered by name, first images then subfolders)
@@ -49,6 +52,36 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
 
 To exit the application, press escape. If you're using a touch display, touch all 4 corners at the same time.
 
+## Configuration file
+Slide supports loading configuration from a JSON formatted file called `slide.options.json`. This file can be specified by the `-c` command line option, we will also attempt to read `~/.config/slide/slide.options.json` and `/etc/slide/slide.options.json` in that order. The first file to load is used and its options will override command line parameters.
+The file format is:
+```
+{
+   "path" : "/path/to/pictures",
+   "aspect" : "m",
+   "overlay" : "20|20|<filename>",
+   "shuffle" : true,
+   "recursive" : true,
+   "sorted" : false,
+   "stretch": false,
+   "rotationSeconds" : 300,
+   "opacity" : 200,
+   "debug" : false
+}
+```
+Supported keys and values in the JSON configuration are:
+* `path` : where to search for images (.jpg files)
+* `aspect` : the same as the command line argument
+* `overlay` : the same as the overlay command line argument
+* `shuffle` : set to true to enable shuffle mode for file display
+* `recursive` : set to true to enable recursive mode for file display
+* `sorted` : set to true to enable shuffle mode for file display
+* `stretch` : set to true to enable, the same as the `--stretch` command line argument
+* `rotationSeconds` : the same as the `-t` command line argument
+* `opacity` : the same as the command line `-o` argument
+* `blur` : the same as the command line `-b` argument
+* `debug` : set to true to enable verbose output from the program
+
 ## Folder Options file
 When using the default or recursive folder mode we support having per folder display options. The options are stored in a file called "options.json" and currently support the following option
 ```
@@ -56,7 +89,7 @@ When using the default or recursive folder mode we support having per folder dis
     "fitAspectAxisToWindow": false
 }
 ```
-* `fitAspectAxisToWindow` : apply the --stretch option to files in this folder
+* `fitAspectAxisToWindow` : apply the `--stretch` option to files in this folder
 
 ## Dependencies
 

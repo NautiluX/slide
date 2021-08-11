@@ -140,9 +140,10 @@ Config loadConfiguration(const Config &commandLineConfig) {
   file.close();
   QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
   QJsonObject jsonDoc = d.object();
-  SetJSONBool(userConfig.baseDisplayOptions.fitAspectAxisToWindow, jsonDoc, "fitAspectAxisToWindow");
+  SetJSONBool(userConfig.baseDisplayOptions.fitAspectAxisToWindow, jsonDoc, "stretch");
   SetJSONBool(userConfig.recursive, jsonDoc, "recursive");
   SetJSONBool(userConfig.shuffle, jsonDoc, "shuffle");
+  SetJSONBool(userConfig.sorted, jsonDoc, "sorted");
   SetJSONBool(userConfig.debugMode, jsonDoc, "debug");
 
   std::string aspectString = ParseJSONString(jsonDoc, "aspect");
@@ -158,6 +159,11 @@ Config loadConfiguration(const Config &commandLineConfig) {
   if(jsonDoc.contains("opacity") && jsonDoc["opacity"].isDouble())
   {
     userConfig.backgroundOpacity = (int)jsonDoc["opacity"].toDouble();
+  }
+
+  if(jsonDoc.contains("blur") && jsonDoc["blur"].isDouble())
+  {
+    userConfig.blurRadius = (int)jsonDoc["blur"].toDouble();
   }
 
   std::string overlayString = ParseJSONString(jsonDoc, "overlay");
