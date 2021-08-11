@@ -24,21 +24,33 @@ void usage(std::string programName) {
 }
 
 struct Config {
-  std::string path = "";
-  std::string configPath = "";
-  unsigned int rotationSeconds = 30;
-  int blurRadius = -1;
-  int backgroundOpacity = -1;
-  bool recursive = false;
-  bool shuffle = false;
-  bool sorted = false;
-  bool debugMode = false;
-  ImageDisplayOptions baseDisplayOptions;
-  std::string valid_aspects = "alpm"; // all, landscape, portait
-  std::string overlay = "";
-  std::string imageList = ""; // comma delimited list of images to show
-  QDateTime loadTime;
+  public:
+    std::string path = "";
+    std::string configPath = "";
+    unsigned int rotationSeconds = 30;
+    int blurRadius = -1;
+    int backgroundOpacity = -1;
+    bool recursive = false;
+    bool shuffle = false;
+    bool sorted = false;
+    bool debugMode = false;
+    ImageDisplayOptions baseDisplayOptions;
+    static const std::string valid_aspects; 
+    std::string overlay = "";
+    std::string imageList = ""; // comma delimited list of images to show
+    QDateTime loadTime;
+  public:
+    bool PathOptionsChanged(Config &other) {
+      if ( other.recursive != recursive || other.shuffle != shuffle
+      || other.sorted != sorted)
+        return true;
+      if ( other.path != path || other.imageList != imageList )
+        return true;
+      return false;
+    }
 };
+
+const std::string Config::valid_aspects = "alpm"; // all, landscape, portait, monitor
 
 ImageAspect parseAspectFromString(char aspect) {
   switch(aspect)
@@ -243,7 +255,58 @@ bool parseCommandLine(Config &appConfig, int argc, char *argv[]) {
   return true;
 }
 
-void ReloadConfigIfNeeded(Config &appConfig, MainWindow &w, ImageSwitcher &switcher, std::shared_ptr<ImageSelector> &selector)
+void ConfigureWindowFromSettings(MainWindow &w, const Config &appConfig)
+{
+  if (appConfig.blurRadius>= 0)
+  {
+    w.setBlurRadius(appConfig.blurRadius);
+  }
+
+  if (appConfig.backgroundOpacity>= 0)
+  {
+      w.setBackgroundOpacity(appConfig.backgroundOpacity);
+  }
+  std::unique_ptr<Overlay> o = std::unique_ptr<Overlay>(new Overlay(appConfig.overlay));
+  o->setDebugMode(appConfig.debugMode);
+  w.setDebugMode(appConfig.debugMode);
+  w.setOverlay(o);
+  w.setBaseOptions(appConfig.baseDisplayOptions);
+}
+
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const Config &appConfig)
+{
+  std::unique_ptr<PathTraverser> pathTraverser;
+  if (!appConfig.imageList.empty())
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(appConfig.imageList, appConfig.debugMode));
+  }
+  else if (appConfig.recursive)
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(appConfig.path, appConfig.debugMode));
+  }
+  else
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(appConfig.path, appConfig.debugMode));
+  }
+
+  std::unique_ptr<ImageSelector> selector;
+  if (appConfig.sorted)
+  {
+    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
+  }
+  else if (appConfig.shuffle)
+  {
+    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
+  }
+  else
+  {
+    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
+  }
+
+  return selector;
+}
+
+void ReloadConfigIfNeeded(Config &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)
 {  
   QString jsonFile = getConfigFilePath(appConfig.configPath);
   QDir directory;
@@ -254,13 +317,21 @@ void ReloadConfigIfNeeded(Config &appConfig, MainWindow &w, ImageSwitcher &switc
 
   if(appConfig.loadTime <  QFileInfo(jsonFile).lastModified())
   {
+    const std::string oldPath = appConfig.path;
+    const std::string oldImageList = appConfig.imageList;
+
+    Config oldConfig = appConfig;
     appConfig = loadConfiguration(appConfig);
-    w.setBaseOptions(appConfig.baseDisplayOptions);
-    w.setDebugMode(appConfig.debugMode);
+
+    ConfigureWindowFromSettings(w, appConfig);
+    if(appConfig.PathOptionsChanged(oldConfig))
+    {
+      std::unique_ptr<ImageSelector> selector = GetSelectorForConfig(appConfig);
+      switcher->setImageSelector(selector);
+    }
+
     selector->setDebugMode(appConfig.debugMode);
-    //Overlay o(appConfig.overlay);
-    //w.setOverlay(&o);
-    switcher.setRotationTime(appConfig.rotationSeconds * 1000);
+    switcher->setRotationTime(appConfig.rotationSeconds * 1000);
   }
 }
 
@@ -268,7 +339,6 @@ int main(int argc, char *argv[])
 {
   QApplication a(argc, argv);
 
-  MainWindow w;
   Config commandLineAppConfig;
   if (!parseCommandLine(commandLineAppConfig, argc, argv))
   {
@@ -285,58 +355,22 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  if (appConfig.blurRadius>= 0)
-  {
-    w.setBlurRadius(appConfig.blurRadius);
-  }
-
-  if (appConfig.backgroundOpacity>= 0)
-  {
-      w.setBackgroundOpacity(appConfig.backgroundOpacity);
-  }
-
-  std::unique_ptr<PathTraverser> pathTraverser;
-  if (!appConfig.imageList.empty())
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(appConfig.imageList, appConfig.debugMode));
-  }
-  else if (appConfig.recursive)
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(appConfig.path, appConfig.debugMode));
-  }
-  else
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(appConfig.path, appConfig.debugMode));
-  }
-
-  std::shared_ptr<ImageSelector> selector;
-  if (appConfig.sorted)
-  {
-    selector = std::shared_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
-  }
-  else if (appConfig.shuffle)
-  {
-    selector = std::shared_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
-  }
-  else
-  {
-    selector = std::shared_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
-  }
-  selector->setDebugMode(appConfig.debugMode);
   if(appConfig.debugMode)
   {
     std::cout << "Rotation Time: " << appConfig.rotationSeconds << std::endl;
     std::cout << "Overlay input: " << appConfig.overlay << std::endl;
   }
-  Overlay o(appConfig.overlay);
-  o.setDebugMode(appConfig.debugMode);
-  w.setOverlay(&o);
-  w.setBaseOptions(appConfig.baseDisplayOptions);
+  
+  MainWindow w;
+  ConfigureWindowFromSettings(w, appConfig);
   w.show();
 
+  std::unique_ptr<ImageSelector> selector = GetSelectorForConfig(appConfig);
+  selector->setDebugMode(appConfig.debugMode);
+  
   ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
   w.setImageSwitcher(&switcher);
-  std::function<void()> reloader = [&appConfig, &w, &switcher, &selector]() { ReloadConfigIfNeeded(appConfig, w, switcher, selector); };
+  std::function<void(MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)> reloader = [&appConfig](MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector) { ReloadConfigIfNeeded(appConfig, w, switcher, selector); };
   switcher.setConfigFileReloader(reloader);
   switcher.start();
   return a.exec();

@@ -12,8 +12,8 @@
 #include <algorithm>    // std::shuffle
 #include <random>       // std::default_random_engine
 
-ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser):
-  pathTraverser(pathTraverser)
+ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverserIn):
+  pathTraverser(std::move(pathTraverserIn))
 {
 }
 

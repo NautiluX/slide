@@ -194,7 +194,7 @@ void MainWindow::updateImage(bool immediately)
     QPixmap background = getBlurredBackground(rotated, scaled);
     drawForeground(background, scaled);
     
-    if (overlay != NULL)
+    if (overlay != nullptr)
     {
       drawText(background, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage.filename).c_str(), Qt::AlignTop|Qt::AlignLeft);
       drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage.filename).c_str(), Qt::AlignTop|Qt::AlignRight);
@@ -254,9 +254,9 @@ void MainWindow::drawForeground(QPixmap& background, const QPixmap& foreground) 
     pt.drawPixmap((background.width()-foreground.width())/2, (background.height()-foreground.height())/2, foreground);
 }
 
-void MainWindow::setOverlay(Overlay* o)
+void MainWindow::setOverlay(std::unique_ptr<Overlay> &o)
 {
-  overlay = o;
+  overlay = std::move(o);
 }
 
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)

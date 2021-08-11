@@ -28,7 +28,7 @@ public:
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
-    void setOverlay(Overlay* overlay);
+    void setOverlay(std::unique_ptr<Overlay> &overlay);
     void setDebugMode(bool debugModeIn);
     void setBaseOptions(const ImageDisplayOptions &baseOptionsIn);
     const ImageDisplayOptions &getBaseOptions();
@@ -46,7 +46,7 @@ private:
     bool debugMode = false;
     QSize lastScreenSize = {0,0};
 
-    Overlay* overlay = nullptr;
+    std::unique_ptr<Overlay> overlay;
     ImageSwitcher *switcher = nullptr;
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);

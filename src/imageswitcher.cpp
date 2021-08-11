@@ -9,11 +9,11 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeoutMsec, std::shared_ptr<ImageSelector>& selector):
+ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeoutMsec, std::unique_ptr<ImageSelector>& selector):
     QObject::QObject(),
     window(w),
     timeout(timeoutMsec),
-    selector(selector),
+    selector(std::move(selector)),
     timer(this),
     timerNoContent(this)
 {
@@ -23,7 +23,7 @@ void ImageSwitcher::updateImage()
 {
     if(reloadConfigIfNeeded)
     {
-      reloadConfigIfNeeded();
+      reloadConfigIfNeeded(window, this, selector.get());
     }
     ImageDetails imageDetails = selector->getNextImage(window.getBaseOptions());
     if (imageDetails.filename == "")
@@ -52,7 +52,7 @@ void ImageSwitcher::scheduleImageUpdate()
   QTimer::singleShot(100, this, SLOT(updateImage())); 
 }
 
-void ImageSwitcher::setConfigFileReloader(std::function<void()> reloadConfigIfNeededIn)
+void ImageSwitcher::setConfigFileReloader(std::function<void(MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)> reloadConfigIfNeededIn)
 {
   reloadConfigIfNeeded = reloadConfigIfNeededIn;
 }
@@ -61,4 +61,9 @@ void ImageSwitcher::setRotationTime(unsigned int timeoutMsecIn)
 {
   timeout = timeoutMsecIn;
   timer.start(timeout);
+}
+
+void ImageSwitcher::setImageSelector(std::unique_ptr<ImageSelector>& selectorIn)
+{
+  selector = std::move(selectorIn);
 }
