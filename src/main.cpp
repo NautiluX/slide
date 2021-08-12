@@ -3,12 +3,9 @@
 #include "imageswitcher.h"
 #include "pathtraverser.h"
 #include "overlay.h"
+#include "appconfig.h"
+
 #include <QApplication>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonValue>
-#include <QDateTime>
-#include <QFileInfo>
 #include <iostream>
 #include <sys/file.h>
 #include <errno.h>
@@ -23,165 +20,7 @@ void usage(std::string programName) {
     std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
 }
 
-struct Config {
-  public:
-    std::string path = "";
-    std::string configPath = "";
-    unsigned int rotationSeconds = 30;
-    int blurRadius = -1;
-    int backgroundOpacity = -1;
-    bool recursive = false;
-    bool shuffle = false;
-    bool sorted = false;
-    bool debugMode = false;
-    ImageDisplayOptions baseDisplayOptions;
-    static const std::string valid_aspects; 
-    std::string overlay = "";
-    std::string imageList = ""; // comma delimited list of images to show
-    QDateTime loadTime;
-  public:
-    bool PathOptionsChanged(Config &other) {
-      if ( other.recursive != recursive || other.shuffle != shuffle
-      || other.sorted != sorted)
-        return true;
-      if ( other.path != path || other.imageList != imageList )
-        return true;
-      return false;
-    }
-};
-
-const std::string Config::valid_aspects = "alpm"; // all, landscape, portait, monitor
-
-ImageAspect parseAspectFromString(char aspect) {
-  switch(aspect)
-  {
-    case 'l':
-      return ImageAspect_Landscape;
-      break;
-    case 'p':
-      return ImageAspect_Portrait;
-      break;
-    case 'm':
-      return ImageAspect_Monitor;
-      break;
-    default:
-    case 'a':
-      return ImageAspect_Any;
-      break;
-  }
-}
-
-std::string ParseJSONString(QJsonObject jsonDoc, const char *key) {
-  if(jsonDoc.contains(key) && jsonDoc[key].isString())
-  {
-   return jsonDoc[key].toString().toStdString();
-  }
-  return "";
-}
-
-void SetJSONBool(bool &value, QJsonObject jsonDoc, const char *key) {
-  if(jsonDoc.contains(key) && jsonDoc[key].isBool())
-  {
-    value = jsonDoc[key].toBool();
-  }
-}
-
-QString getConfigFilePath(const std::string &configPath) {
-  std::string userConfigFolder = "~/.config/slide/";
-  std::string systemConfigFolder = "/etc/slide";
-  QString baseConfigFilename("slide.options.json");
-  
-  QDir directory(userConfigFolder.c_str());
-  QString jsonFile = "";
-  if (!configPath.empty())
-  { 
-    directory.setPath(configPath.c_str());
-    jsonFile = directory.filePath(baseConfigFilename);    
-  }
-   if(!directory.exists(jsonFile))
-  { 
-    directory.setPath(userConfigFolder.c_str());
-    jsonFile = directory.filePath(baseConfigFilename);    
-  }
-  if(!directory.exists(jsonFile))
-  {
-    directory.setPath(systemConfigFolder.c_str());
-    jsonFile = directory.filePath(baseConfigFilename);
-  }
-
-  if(directory.exists(jsonFile))
-  {
-    return jsonFile;
-  }
-
-  return "";
-}
-
-Config loadConfiguration(const Config &commandLineConfig) {
-  QString jsonFile = getConfigFilePath(commandLineConfig.configPath);
-  QDir directory;
-  if(!directory.exists(jsonFile))
-  {
-    return commandLineConfig; // nothing to load
-  }
-
-  Config userConfig = commandLineConfig;
-
-  if(userConfig.debugMode)
-  {
-    std::cout << "Found options file: " << jsonFile.toStdString() << std::endl;
-  }
-
-  QString val;
-  QFile file;
-  file.setFileName(jsonFile);
-  file.open(QIODevice::ReadOnly | QIODevice::Text);
-  val = file.readAll();
-  file.close();
-  QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
-  QJsonObject jsonDoc = d.object();
-  SetJSONBool(userConfig.baseDisplayOptions.fitAspectAxisToWindow, jsonDoc, "stretch");
-  SetJSONBool(userConfig.recursive, jsonDoc, "recursive");
-  SetJSONBool(userConfig.shuffle, jsonDoc, "shuffle");
-  SetJSONBool(userConfig.sorted, jsonDoc, "sorted");
-  SetJSONBool(userConfig.debugMode, jsonDoc, "debug");
-
-  std::string aspectString = ParseJSONString(jsonDoc, "aspect");
-  if(!aspectString.empty())
-  {
-    userConfig.baseDisplayOptions.onlyAspect = parseAspectFromString(aspectString[0]);
-  }
-  if(jsonDoc.contains("rotationSeconds") && jsonDoc["rotationSeconds"].isDouble())
-  {
-    userConfig.rotationSeconds = (int)jsonDoc["rotationSeconds"].toDouble();
-  }
-
-  if(jsonDoc.contains("opacity") && jsonDoc["opacity"].isDouble())
-  {
-    userConfig.backgroundOpacity = (int)jsonDoc["opacity"].toDouble();
-  }
-
-  if(jsonDoc.contains("blur") && jsonDoc["blur"].isDouble())
-  {
-    userConfig.blurRadius = (int)jsonDoc["blur"].toDouble();
-  }
-
-  std::string overlayString = ParseJSONString(jsonDoc, "overlay");
-  if(!overlayString.empty())
-  {
-    userConfig.overlay = overlayString;
-  }
-  std::string pathString = ParseJSONString(jsonDoc, "path");
-  if(!pathString.empty())
-  {
-    userConfig.path = pathString;
-  }
-
-  userConfig.loadTime = QDateTime::currentDateTime();
-  return userConfig;
-}
-
-bool parseCommandLine(Config &appConfig, int argc, char *argv[]) {
+bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
   int opt;
   int debugInt = 0;
   int stretchInt = 0;
@@ -261,7 +100,7 @@ bool parseCommandLine(Config &appConfig, int argc, char *argv[]) {
   return true;
 }
 
-void ConfigureWindowFromSettings(MainWindow &w, const Config &appConfig)
+void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
 {
   if (appConfig.blurRadius>= 0)
   {
@@ -279,7 +118,7 @@ void ConfigureWindowFromSettings(MainWindow &w, const Config &appConfig)
   w.setBaseOptions(appConfig.baseDisplayOptions);
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForConfig(const Config &appConfig)
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const AppConfig&appConfig)
 {
   std::unique_ptr<PathTraverser> pathTraverser;
   if (!appConfig.imageList.empty())
@@ -312,9 +151,9 @@ std::unique_ptr<ImageSelector> GetSelectorForConfig(const Config &appConfig)
   return selector;
 }
 
-void ReloadConfigIfNeeded(Config &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)
+void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)
 {  
-  QString jsonFile = getConfigFilePath(appConfig.configPath);
+  QString jsonFile = getAppConfigFilePath(appConfig.configPath);
   QDir directory;
   if(!directory.exists(jsonFile))
   {
@@ -326,8 +165,8 @@ void ReloadConfigIfNeeded(Config &appConfig, MainWindow &w, ImageSwitcher *switc
     const std::string oldPath = appConfig.path;
     const std::string oldImageList = appConfig.imageList;
 
-    Config oldConfig = appConfig;
-    appConfig = loadConfiguration(appConfig);
+    AppConfig oldConfig = appConfig;
+    appConfig = loadAppConfiguration(appConfig);
 
     ConfigureWindowFromSettings(w, appConfig);
     if(appConfig.PathOptionsChanged(oldConfig))
@@ -345,14 +184,14 @@ int main(int argc, char *argv[])
 {
   QApplication a(argc, argv);
 
-  Config commandLineAppConfig;
+  AppConfig commandLineAppConfig;
   if (!parseCommandLine(commandLineAppConfig, argc, argv))
   {
     usage(argv[0]);
     return 1;
   }
 
-  Config appConfig = loadConfiguration(commandLineAppConfig);
+  AppConfig appConfig = loadAppConfiguration(commandLineAppConfig);
 
   if (appConfig.path.empty() && appConfig.imageList.empty())
   {

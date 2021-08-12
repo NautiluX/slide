@@ -83,13 +83,17 @@ Supported keys and values in the JSON configuration are:
 * `debug` : set to true to enable verbose output from the program
 
 ## Folder Options file
-When using the default or recursive folder mode we support having per folder display options. The options are stored in a file called "options.json" and currently support the following option
+When using the default or recursive folder mode we support having per folder display options. The options are stored in a file called "options.json" in the images folder and support a subset of the applications configuration settings:
 ```
 {
-    "fitAspectAxisToWindow": false
+   "stretch": false,
+   "aspect" : "m",
+   "rotationSeconds" : 300,
+   "opacity" : 200,
+   "blur" : 20
 }
 ```
-* `fitAspectAxisToWindow` : apply the `--stretch` option to files in this folder
+See the `Configuration File` section for details of each setting.
 
 ## Dependencies
 

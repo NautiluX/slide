@@ -1,16 +1,13 @@
 #include "pathtraverser.h"
 #include "mainwindow.h"
+#include "appconfig.h"
+
 #include <QDirIterator>
-#include <QTimer>
-#include <QApplication>
 #include <QDir>
 #include <QFileInfo>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonValue>
 #include <iostream>
 #include <stdlib.h>     /* srand, rand */
-#define UNUSED(x) (void)(x)
+
 
 PathTraverser::PathTraverser(const std::string path, bool debugModeIn):
   path(path), debugMode(debugModeIn)
@@ -27,33 +24,9 @@ QStringList PathTraverser::getImageFormats() const {
 
 ImageDisplayOptions PathTraverser::LoadOptionsForDirectory(const std::string &directoryPath, const ImageDisplayOptions &baseOptions) const
 {
-  ImageDisplayOptions options = baseOptions;
-  QDir directory(directoryPath.c_str());
-  QString jsonFile = directory.filePath(QString("options.json"));
-  if(directory.exists(jsonFile))
-  {
-    if(debugMode)
-    {
-      std::cout << "Found options file" << std::endl;
-    }
-    QString val;
-    QFile file;
-    file.setFileName(jsonFile);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    val = file.readAll();
-    file.close();
-    QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
-    QJsonObject jsonDoc = d.object();
-    if(jsonDoc.contains("fitAspectAxisToWindow") && jsonDoc["fitAspectAxisToWindow"].isBool())
-    {
-      options.fitAspectAxisToWindow = jsonDoc["fitAspectAxisToWindow"].toBool();
-      if(debugMode)
-      {
-        std::cout << "Fit Aspect:" << options.fitAspectAxisToWindow << std::endl;
-      }
-    }
-  }
-  return options;
+  Config baseConfig;
+  baseConfig.baseDisplayOptions = baseOptions;
+  return getConfigurationForFolder(directoryPath, baseConfig, debugMode).baseDisplayOptions;
 }
 
 RecursivePathTraverser::RecursivePathTraverser(const std::string path,bool debugMode):
@@ -106,7 +79,7 @@ const std::string DefaultPathTraverser::getImagePath(const std::string image) co
 
 ImageDisplayOptions DefaultPathTraverser::UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const
 {
-  UNUSED(filename);
+  Q_UNUSED(filename);
   return LoadOptionsForDirectory(directory.absolutePath().toStdString(), baseOptions);
 }
 
@@ -133,7 +106,7 @@ const std::string ImageListPathTraverser::getImagePath(const std::string image) 
 ImageDisplayOptions ImageListPathTraverser::UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const
 {
   // no per file options modification supported
-  UNUSED(filename);
-  UNUSED(baseOptions);
+  Q_UNUSED(filename);
+  Q_UNUSED(baseOptions);
   return ImageDisplayOptions();
 }
