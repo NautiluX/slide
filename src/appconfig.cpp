@@ -3,7 +3,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QJsonArray>
 #include <QDateTime>
+#include <QTime>
 #include <QFileInfo>
 #include <QDir>
 
@@ -88,6 +90,28 @@ Config loadConfiguration(const std::string &configFilePath, const Config &curren
   if(jsonDoc.contains("blur") && jsonDoc["blur"].isDouble())
   {
     userConfig.blurRadius = (int)jsonDoc["blur"].toDouble();
+  }
+
+  if(jsonDoc.contains("times") && jsonDoc["times"].isArray())
+  {
+      QJsonArray jsonArray = jsonDoc["times"].toArray();
+      foreach (const QJsonValue & value, jsonArray) 
+      {
+        QJsonObject obj = value.toObject();
+        if(obj.contains("start") || obj.contains("end"))
+        {
+            DisplayTimeWindow window;
+            if(obj.contains("start"))
+            {
+                window.startDisplay = QTime::fromString(obj["start"].toString());
+            }
+            if(obj.contains("end"))
+            {
+                window.endDisplay = QTime::fromString(obj["end"].toString());
+            }
+            userConfig.baseDisplayOptions.timeWindows.append(window);
+        }
+     }
   }
 
   userConfig.loadTime = QDateTime::currentDateTime();

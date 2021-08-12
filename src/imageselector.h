@@ -21,6 +21,7 @@ protected:
     ImageDetails populateImageDetails(const std::string&filename, const ImageDisplayOptions &baseOptions);
     bool imageValidForAspect(const ImageDetails& imageDetails);
     bool imageMatchesFilter(const ImageDetails& imageDetails);
+    bool imageInsideTimeWindow(const QVector<DisplayTimeWindow> &timeWindows);
     std::unique_ptr<PathTraverser> pathTraverser;
     bool debugMode = false;
 };

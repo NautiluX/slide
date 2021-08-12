@@ -90,10 +90,21 @@ When using the default or recursive folder mode we support having per folder dis
    "aspect" : "m",
    "rotationSeconds" : 300,
    "opacity" : 200,
-   "blur" : 20
+   "blur" : 20,
+   "times": [
+      {
+          "start": "08:00",
+          "end": "10:00"
+      },
+      {
+          "start": "17:00",
+          "end": "19:00"
+      }
+   ]
 }
 ```
 See the `Configuration File` section for details of each setting.
+* `times` : times is a JSON array of start and end times in which it is valid to display this image. The time is in the format HH:MM:SS and is based on the systems local time. If `start` isn't defined then it defaults to the start of the day, if `end` isn't default it defaults to the end of the day.
 
 ## Dependencies
 

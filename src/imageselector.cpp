@@ -111,8 +111,35 @@ ImageDetails ImageSelector::populateImageDetails(const std::string&fileName, con
   } else {
     imageDetails.aspect = ImageAspect_Any;
   }
-  imageDetails.options = baseOptions;
+
+  imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, baseOptions);
+  
   return imageDetails;
+}
+
+bool ImageSelector::imageInsideTimeWindow(const QVector<DisplayTimeWindow> &timeWindows)
+{
+  if(timeWindows.count() == 0)
+  {
+      return true; // no specified time windows means always display
+  }
+  const QTime currentTime = QTime::currentTime();
+  for(auto &window : timeWindows)
+  {
+    if(currentTime > window.startDisplay && currentTime < window.endDisplay)
+    {
+      return true;
+    }
+  }
+  if(debugMode && timeWindows.count() > 0)
+  {
+    std::cout << "image display time outside windows: " << std::endl;
+    for(auto timeWindow : timeWindows) 
+    {
+      std::cout << "time: " << timeWindow.startDisplay.toString().toStdString() << "-" << timeWindow.endDisplay.toString().toStdString() << std::endl;
+    }
+  }
+  return false;
 }
 
 bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
@@ -135,6 +162,10 @@ bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
     return false;
   }
 
+  if(!imageInsideTimeWindow(imageDetails.options.timeWindows))
+  {
+    return false;
+  }
   return true;
 }
 
@@ -176,7 +207,6 @@ const ImageDetails RandomImageSelector::getNextImage(const ImageDisplayOptions &
     std::cerr << "Error: " << err << std::endl;
   }
   std::cout << "updating image: " << imageDetails.filename << std::endl;
-  imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
   return imageDetails;
 }
 
@@ -221,7 +251,6 @@ const ImageDetails ShuffleImageSelector::getNextImage(const ImageDisplayOptions 
     current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
   }
   std::cout << "updating image: " << imageDetails.filename << std::endl;
-  imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, imageDetails.options);
   return imageDetails;
 }
 
