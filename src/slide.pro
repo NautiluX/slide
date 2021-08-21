@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+# CONFIG += qt debug
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -33,14 +34,17 @@ SOURCES += \
         imageswitcher.cpp \
         pathtraverser.cpp \
         overlay.cpp \
-    imageselector.cpp
+        imageselector.cpp \
+        appconfig.cpp
 
 HEADERS += \
         mainwindow.h \
         imageselector.h \
         pathtraverser.h \
         overlay.h \
-    imageswitcher.h
+        imageswitcher.h \
+        imagestructs.h \
+        appconfig.h
 
 FORMS += \
         mainwindow.ui
