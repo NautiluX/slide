@@ -3,6 +3,7 @@
 #define APPCONFIG_H
 #include <QDateTime>
 #include "imagestructs.h"
+#include <QVector>
 
 // configuration options that apply to an image/folder of images
 struct Config {
@@ -14,34 +15,44 @@ struct Config {
     QDateTime loadTime;
 };
 
-// app level configuration
-struct AppConfig : public Config
-{
-    AppConfig() {}
-    AppConfig( const Config &inConfig ) : Config(inConfig) {}
-    std::string path = "";
-    std::string configPath = "";
+struct PathEntry {
+  QVector<DisplayTimeWindow> timeWindows;
+  std::string path = "";
+  std::string imageList = "";
+  std::string type = "";
+  bool exclusive = false;
 
-    std::string overlay = "";
-    std::string imageList = ""; // comma delimited list of images to show
-
-    bool recursive = false;
-    bool shuffle = false;
-    bool sorted = false;
-    bool debugMode = false;
-    static const std::string valid_aspects; 
-
-  public:
-    bool PathOptionsChanged(AppConfig &other) {
-      if ( other.recursive != recursive || other.shuffle != shuffle
-      || other.sorted != sorted)
-        return true;
-      if ( other.path != path || other.imageList != imageList )
-        return true;
-      return false;
-    }
+  bool recursive = false;
+  bool shuffle = false;
+  bool sorted = false;
 };
 
+// app level configuration
+struct AppConfig : public Config {
+    AppConfig() {}
+    AppConfig( const Config &inConfig ) : Config(inConfig) {}
+    std::string configPath = "";
+    std::string overlay = "";
+    QVector<PathEntry> paths;
+
+    bool debugMode = false;
+
+    static const std::string valid_aspects; 
+  public:
+    bool PathOptionsChanged(AppConfig &other) {
+      if (paths.count() != other.paths.count())
+        return true;
+      for(int index = 0; index < paths.count(); ++index)
+      {
+        if ( other.paths[index].recursive != paths[index].recursive || other.paths[index].shuffle != paths[index].shuffle
+        || other.paths[index].sorted != paths[index].sorted)
+          return true;
+        if ( other.paths[index].path != paths[index].path || other.paths[index].imageList != paths[index].imageList )
+          return true;
+      }
+     return false;
+    }
+};
 
 AppConfig loadAppConfiguration(const AppConfig &commandLineConfig);
 Config getConfigurationForFolder(const std::string &folderPath, const Config &currentConfig, bool debugMode);

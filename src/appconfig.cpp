@@ -150,6 +150,67 @@ QString getAppConfigFilePath(const std::string &configPath) {
   return "";
 }
 
+QVector<PathEntry> parsePathEntry(QJsonObject &jsonMainDoc, bool baseRecursive, bool baseShuffle, bool baseSorted)
+{
+  QVector<PathEntry> pathEntries;
+  
+  if(jsonMainDoc.contains("scheduler") && jsonMainDoc["scheduler"].isArray()) 
+  {
+    QJsonArray jsonArray = jsonMainDoc["scheduler"].toArray();
+    foreach (const QJsonValue & value, jsonArray) 
+    {
+      PathEntry entry;
+      entry.recursive = baseRecursive;
+      entry.sorted = baseSorted;
+      entry.shuffle = baseShuffle;
+
+      QJsonObject schedulerJson = value.toObject();
+
+      SetJSONBool(entry.recursive, schedulerJson, "recursive");
+      SetJSONBool(entry.shuffle, schedulerJson, "shuffle");
+      SetJSONBool(entry.sorted, schedulerJson, "sorted");
+
+      std::string pathString = ParseJSONString(schedulerJson, "path");
+      if(!pathString.empty()) {
+        entry.path = pathString;
+      }
+      std::string imageListString = ParseJSONString(schedulerJson, "imageList");
+      if(!imageListString.empty()) {
+        entry.imageList = imageListString;
+      }
+      std::string typeString = ParseJSONString(schedulerJson, "type");
+      if(!pathString.empty()) {
+        entry.type = typeString;
+      }
+      SetJSONBool(entry.exclusive, schedulerJson, "exclusive");
+
+      if(schedulerJson.contains("times") && schedulerJson["times"].isArray())
+      {
+          QJsonArray jsonTimesArray = schedulerJson["times"].toArray();
+          foreach (const QJsonValue & timesValue, jsonTimesArray) 
+          {
+            QJsonObject timesJson = timesValue.toObject();
+            if(timesJson.contains("start") || timesJson.contains("end"))
+            {
+                DisplayTimeWindow window;
+                if(timesJson.contains("start"))
+                {
+                    window.startDisplay = QTime::fromString(timesJson["start"].toString());
+                }
+                if(timesJson.contains("end"))
+                {
+                    window.endDisplay = QTime::fromString(timesJson["end"].toString());
+                }
+                entry.timeWindows.append(window);
+            }
+        }
+      }
+      pathEntries.append(entry);
+    }
+  }
+  return pathEntries;
+}
+
 AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
   QString jsonFile = getAppConfigFilePath(commandLineConfig.configPath);
   QDir directory;
@@ -169,9 +230,10 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
   QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
   QJsonObject jsonDoc = d.object();
 
-  SetJSONBool(loadedConfig.recursive, jsonDoc, "recursive");
-  SetJSONBool(loadedConfig.shuffle, jsonDoc, "shuffle");
-  SetJSONBool(loadedConfig.sorted, jsonDoc, "sorted");
+  bool baseRecursive, baseShuffle, baseSorted;
+  SetJSONBool(baseRecursive, jsonDoc, "recursive");
+  SetJSONBool(baseShuffle, jsonDoc, "shuffle");
+  SetJSONBool(baseSorted, jsonDoc, "sorted");
   SetJSONBool(loadedConfig.debugMode, jsonDoc, "debug");
 
   std::string overlayString = ParseJSONString(jsonDoc, "overlay");
@@ -179,17 +241,26 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
   {
     loadedConfig.overlay = overlayString;
   }
-  std::string pathString = ParseJSONString(jsonDoc, "path");
-  if(!pathString.empty())
-  {
-    loadedConfig.path = pathString;
-  }
-  std::string imageListString = ParseJSONString(jsonDoc, "imageList");
-  if(!imageListString.empty())
-  {
-    loadedConfig.imageList = imageListString;
-  }
 
+  loadedConfig.paths = parsePathEntry(jsonDoc, baseRecursive, baseShuffle, baseSorted);
+  if(loadedConfig.paths.count() <= 0)
+  {
+    PathEntry entry;
+    entry.recursive = baseRecursive;
+    entry.sorted = baseSorted;
+    entry.shuffle = baseShuffle;
+    std::string pathString = ParseJSONString(jsonDoc, "path");
+    if(!pathString.empty())
+    {
+      entry.path = pathString;
+    }
+    std::string imageListString = ParseJSONString(jsonDoc, "imageList");
+    if(!imageListString.empty())
+    {
+      entry.imageList = imageListString;
+    }
+    loadedConfig.paths.append(entry);
+  }
   loadedConfig.configPath = commandLineConfig.configPath;
   return loadedConfig;
 }

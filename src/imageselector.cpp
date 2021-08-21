@@ -17,6 +17,8 @@ ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverserIn):
 {
 }
 
+ImageSelector::ImageSelector() {}
+
 ImageSelector::~ImageSelector(){}
 
 void ImageSelector::setDebugMode(bool debugModeIn) 
@@ -134,7 +136,7 @@ bool ImageSelector::imageInsideTimeWindow(const QVector<DisplayTimeWindow> &time
   if(debugMode && timeWindows.count() > 0)
   {
     std::cout << "image display time outside windows: " << std::endl;
-    for(auto timeWindow : timeWindows) 
+    for(auto &timeWindow : timeWindows) 
     {
       std::cout << "time: " << timeWindow.startDisplay.toString().toStdString() << "-" << timeWindow.endDisplay.toString().toStdString() << std::endl;
     }
@@ -323,4 +325,52 @@ void SortedImageSelector::reloadImagesIfEmpty()
       }
     }
   }
+}
+
+
+ListImageSelector::ListImageSelector()
+{
+  currentSelector = imageSelectors.begin();
+}
+
+ListImageSelector::~ListImageSelector() 
+{
+}
+
+void ListImageSelector::AddImageSelector(std::unique_ptr<ImageSelector>& selector, const QVector<DisplayTimeWindow> &displayTimeWindows, const bool exclusiveIn)
+{
+  SelectoryEntry entry;
+  entry.selector = std::move(selector);
+  entry.displayTimeWindows = displayTimeWindows;
+  entry.exclusive = exclusiveIn;
+  imageSelectors.push_back(std::move(entry));
+  currentSelector = imageSelectors.begin();
+}
+
+
+const ImageDetails ListImageSelector::getNextImage(const ImageDisplayOptions& baseOptions)
+{
+  // check for exclusive time windows
+  for(auto& selector: imageSelectors)
+  {
+    if (imageInsideTimeWindow(selector.displayTimeWindows) && selector.exclusive) 
+    {
+      return selector.selector->getNextImage(baseOptions);
+    }
+  }
+
+  // fall back to the next in the list
+  do
+  {  
+    ++currentSelector;
+    if(currentSelector == imageSelectors.end())
+    {
+      currentSelector = imageSelectors.begin();
+    }
+    if (imageInsideTimeWindow(currentSelector->displayTimeWindows))
+    {
+      return currentSelector->selector->getNextImage(baseOptions);
+    }
+  }
+  while(true);
 }

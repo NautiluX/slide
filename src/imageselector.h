@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <QStringList>
+#include <QVector>
 #include "imagestructs.h"
 
 class MainWindow;
@@ -13,6 +14,7 @@ class ImageSelector
 {
 public:
     ImageSelector(std::unique_ptr<PathTraverser>& pathTraverser);
+    ImageSelector(); // use case for when you don't own your own traverser
     virtual ~ImageSelector();
     virtual const ImageDetails getNextImage(const ImageDisplayOptions &baseOptions) = 0;
     void setDebugMode(bool debugModeIn);
@@ -60,5 +62,23 @@ public:
 private:
     void reloadImagesIfEmpty();
     QStringList images;
+};
+
+class ListImageSelector : public ImageSelector
+{
+public:
+    ListImageSelector();
+    virtual ~ListImageSelector();
+    virtual const ImageDetails getNextImage(const ImageDisplayOptions &baseOptions);
+    void AddImageSelector(std::unique_ptr<ImageSelector>& selector, const QVector<DisplayTimeWindow> &displayTimeWindows, const bool exclusiveIn);
+
+private:
+    struct SelectoryEntry {
+        std::unique_ptr<ImageSelector> selector;
+        QVector<DisplayTimeWindow> displayTimeWindows;
+        bool exclusive = false;
+    };
+    std::vector<SelectoryEntry> imageSelectors;
+    std::vector<SelectoryEntry>::iterator currentSelector;
 };
 #endif // IMAGESELECTOR_H

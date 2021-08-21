@@ -39,7 +39,9 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
           return false;
           break;
       case 'p':
-        appConfig.path = optarg;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].path = optarg;
         break;
       case 'a':
         if (appConfig.valid_aspects.find(optarg[0]) == std::string::npos)
@@ -62,14 +64,20 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
         appConfig.backgroundOpacity = atoi(optarg);
         break;
       case 'r':
-        appConfig.recursive = true;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].recursive = true;
         break;
       case 's':
-        appConfig.shuffle = true;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].shuffle = true;
         std::cout << "Shuffle mode is on." << std::endl;
         break;
       case 'S':
-        appConfig.sorted = true;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].sorted = true;
         break;
       case 'O':
         appConfig.overlay = optarg;
@@ -78,7 +86,9 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
         appConfig.debugMode = true;
         break;
       case 'i':
-        appConfig.imageList = optarg;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].imageList = optarg;
         break;
       case 'c':
         appConfig.configPath = optarg;
@@ -118,28 +128,28 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
   w.setBaseOptions(appConfig.baseDisplayOptions);
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForConfig(const AppConfig&appConfig)
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, const bool debugMode)
 {
   std::unique_ptr<PathTraverser> pathTraverser;
-  if (!appConfig.imageList.empty())
+  if (!path.imageList.empty())
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(appConfig.imageList, appConfig.debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(path.imageList, debugMode));
   }
-  else if (appConfig.recursive)
+  else if (path.recursive)
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(appConfig.path, appConfig.debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path.path, debugMode));
   }
   else
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(appConfig.path, appConfig.debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path.path, debugMode));
   }
 
   std::unique_ptr<ImageSelector> selector;
-  if (appConfig.sorted)
+  if (path.sorted)
   {
     selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
   }
-  else if (appConfig.shuffle)
+  else if (path.shuffle)
   {
     selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
   }
@@ -150,6 +160,26 @@ std::unique_ptr<ImageSelector> GetSelectorForConfig(const AppConfig&appConfig)
 
   return selector;
 }
+
+std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
+{
+  if(appConfig.paths.count()==1)
+  {
+    return GetSelectorForConfig(appConfig.paths[0], appConfig.debugMode);
+  }
+  else
+  {
+    std::unique_ptr<ListImageSelector> listSelector(new ListImageSelector());
+    for(const auto &path : appConfig.paths)
+    {
+      auto selector = GetSelectorForConfig(path, appConfig.debugMode);
+      listSelector->AddImageSelector(selector,path.timeWindows, path.exclusive);
+    }
+    // new things
+    return listSelector;
+  }
+}
+
 
 void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)
 {  
@@ -162,16 +192,13 @@ void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *sw
 
   if(appConfig.loadTime <  QFileInfo(jsonFile).lastModified())
   {
-    const std::string oldPath = appConfig.path;
-    const std::string oldImageList = appConfig.imageList;
-
     AppConfig oldConfig = appConfig;
     appConfig = loadAppConfiguration(appConfig);
 
     ConfigureWindowFromSettings(w, appConfig);
     if(appConfig.PathOptionsChanged(oldConfig))
     {
-      std::unique_ptr<ImageSelector> selector = GetSelectorForConfig(appConfig);
+      std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
       switcher->setImageSelector(selector);
     }
 
@@ -193,7 +220,7 @@ int main(int argc, char *argv[])
 
   AppConfig appConfig = loadAppConfiguration(commandLineAppConfig);
 
-  if (appConfig.path.empty() && appConfig.imageList.empty())
+  if (appConfig.paths.empty())
   {
     std::cout << "Error: Path expected." << std::endl;
     usage(argv[0]);
@@ -210,7 +237,7 @@ int main(int argc, char *argv[])
   ConfigureWindowFromSettings(w, appConfig);
   w.show();
 
-  std::unique_ptr<ImageSelector> selector = GetSelectorForConfig(appConfig);
+  std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
   selector->setDebugMode(appConfig.debugMode);
   
   ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
