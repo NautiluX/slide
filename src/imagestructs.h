@@ -12,6 +12,11 @@ struct DisplayTimeWindow
 {
     QTime startDisplay = QTime(0,0,0,0);
     QTime endDisplay = QTime(23,59,59,0);
+    
+    bool operator!=(const DisplayTimeWindow &b) const
+    {
+        return startDisplay != b.startDisplay || endDisplay != b.endDisplay;
+    }
 };
 
 // options to consider when displaying an image

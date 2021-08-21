@@ -337,12 +337,12 @@ ListImageSelector::~ListImageSelector()
 {
 }
 
-void ListImageSelector::AddImageSelector(std::unique_ptr<ImageSelector>& selector, const QVector<DisplayTimeWindow> &displayTimeWindows, const bool exclusiveIn)
+void ListImageSelector::AddImageSelector(std::unique_ptr<ImageSelector>& selector, const bool exclusiveIn, const ImageDisplayOptions& baseDisplayOptionsIn)
 {
   SelectoryEntry entry;
   entry.selector = std::move(selector);
-  entry.displayTimeWindows = displayTimeWindows;
   entry.exclusive = exclusiveIn;
+  entry.baseDisplayOptions = baseDisplayOptionsIn;
   imageSelectors.push_back(std::move(entry));
   currentSelector = imageSelectors.begin();
 }
@@ -353,9 +353,12 @@ const ImageDetails ListImageSelector::getNextImage(const ImageDisplayOptions& ba
   // check for exclusive time windows
   for(auto& selector: imageSelectors)
   {
-    if (imageInsideTimeWindow(selector.displayTimeWindows) && selector.exclusive) 
+    if (imageInsideTimeWindow(selector.baseDisplayOptions.timeWindows) && selector.exclusive) 
     {
-      return selector.selector->getNextImage(baseOptions);
+      ImageDisplayOptions options = baseOptions;
+      if (selector.baseDisplayOptions.fitAspectAxisToWindow)
+        options.fitAspectAxisToWindow = true;
+      return selector.selector->getNextImage(options);
     }
   }
 
@@ -367,9 +370,12 @@ const ImageDetails ListImageSelector::getNextImage(const ImageDisplayOptions& ba
     {
       currentSelector = imageSelectors.begin();
     }
-    if (imageInsideTimeWindow(currentSelector->displayTimeWindows))
+    if (imageInsideTimeWindow(currentSelector->baseDisplayOptions.timeWindows))
     {
-      return currentSelector->selector->getNextImage(baseOptions);
+      ImageDisplayOptions options = baseOptions;
+      if (currentSelector->baseDisplayOptions.fitAspectAxisToWindow)
+        options.fitAspectAxisToWindow = true;
+      return currentSelector->selector->getNextImage(options);
     }
   }
   while(true);

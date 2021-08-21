@@ -16,15 +16,38 @@ struct Config {
 };
 
 struct PathEntry {
-  QVector<DisplayTimeWindow> timeWindows;
   std::string path = "";
   std::string imageList = "";
-  std::string type = "";
-  bool exclusive = false;
+  bool exclusive = false; // only use this entry when it is valid, skip others
 
   bool recursive = false;
   bool shuffle = false;
   bool sorted = false;
+  ImageDisplayOptions baseDisplayOptions;
+
+  bool operator==(const PathEntry &b) const
+  {
+    return !operator!=(b);
+  }
+  bool operator!=(const PathEntry &b) const
+  {
+    if (b.exclusive != exclusive)
+      return true;
+    if (b.recursive != recursive || b.shuffle != shuffle || b.sorted != sorted)
+      return true;
+    if(b.baseDisplayOptions.fitAspectAxisToWindow != baseDisplayOptions.fitAspectAxisToWindow)
+      return true;
+    if (b.path != path || b.imageList != imageList)
+      return true;
+    if (b.baseDisplayOptions.timeWindows.count() != baseDisplayOptions.timeWindows.count())
+      return true;
+    for(int i = 0; i < baseDisplayOptions.timeWindows.count(); ++i)
+    {
+      if (b.baseDisplayOptions.timeWindows[i] != baseDisplayOptions.timeWindows[i])
+        return true;
+    }
+    return false;
+  }
 };
 
 // app level configuration
@@ -39,18 +62,16 @@ struct AppConfig : public Config {
 
     static const std::string valid_aspects; 
   public:
-    bool PathOptionsChanged(AppConfig &other) {
+    bool PathOptionsChanged(AppConfig &other) 
+    {
       if (paths.count() != other.paths.count())
         return true;
       for(int index = 0; index < paths.count(); ++index)
       {
-        if ( other.paths[index].recursive != paths[index].recursive || other.paths[index].shuffle != paths[index].shuffle
-        || other.paths[index].sorted != paths[index].sorted)
-          return true;
-        if ( other.paths[index].path != paths[index].path || other.paths[index].imageList != paths[index].imageList )
+        if(other.paths[index] != paths[index])
           return true;
       }
-     return false;
+      return false;
     }
 };
 

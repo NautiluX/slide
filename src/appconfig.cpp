@@ -170,6 +170,8 @@ QVector<PathEntry> parsePathEntry(QJsonObject &jsonMainDoc, bool baseRecursive, 
       SetJSONBool(entry.shuffle, schedulerJson, "shuffle");
       SetJSONBool(entry.sorted, schedulerJson, "sorted");
 
+      SetJSONBool(entry.baseDisplayOptions.fitAspectAxisToWindow, schedulerJson, "stretch");
+
       std::string pathString = ParseJSONString(schedulerJson, "path");
       if(!pathString.empty()) {
         entry.path = pathString;
@@ -178,10 +180,7 @@ QVector<PathEntry> parsePathEntry(QJsonObject &jsonMainDoc, bool baseRecursive, 
       if(!imageListString.empty()) {
         entry.imageList = imageListString;
       }
-      std::string typeString = ParseJSONString(schedulerJson, "type");
-      if(!pathString.empty()) {
-        entry.type = typeString;
-      }
+
       SetJSONBool(entry.exclusive, schedulerJson, "exclusive");
 
       if(schedulerJson.contains("times") && schedulerJson["times"].isArray())
@@ -201,7 +200,7 @@ QVector<PathEntry> parsePathEntry(QJsonObject &jsonMainDoc, bool baseRecursive, 
                 {
                     window.endDisplay = QTime::fromString(timesJson["end"].toString());
                 }
-                entry.timeWindows.append(window);
+                entry.baseDisplayOptions.timeWindows.append(window);
             }
         }
       }

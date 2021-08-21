@@ -70,12 +70,12 @@ public:
     ListImageSelector();
     virtual ~ListImageSelector();
     virtual const ImageDetails getNextImage(const ImageDisplayOptions &baseOptions);
-    void AddImageSelector(std::unique_ptr<ImageSelector>& selector, const QVector<DisplayTimeWindow> &displayTimeWindows, const bool exclusiveIn);
+    void AddImageSelector(std::unique_ptr<ImageSelector>& selector, const bool exclusiveIn, const ImageDisplayOptions& baseDisplayOptionsIn);
 
 private:
     struct SelectoryEntry {
         std::unique_ptr<ImageSelector> selector;
-        QVector<DisplayTimeWindow> displayTimeWindows;
+        ImageDisplayOptions baseDisplayOptions;
         bool exclusive = false;
     };
     std::vector<SelectoryEntry> imageSelectors;

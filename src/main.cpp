@@ -173,7 +173,7 @@ std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
     for(const auto &path : appConfig.paths)
     {
       auto selector = GetSelectorForConfig(path, appConfig.debugMode);
-      listSelector->AddImageSelector(selector,path.timeWindows, path.exclusive);
+      listSelector->AddImageSelector(selector, path.exclusive, path.baseDisplayOptions);
     }
     // new things
     return listSelector;
