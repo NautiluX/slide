@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QPixmap>
+#include <QNetworkAccessManager>
 #include "imagestructs.h"
 #include "imageselector.h"
 
@@ -33,8 +34,11 @@ public:
     void setBaseOptions(const ImageDisplayOptions &baseOptionsIn);
     const ImageDisplayOptions &getBaseOptions();
     void setImageSwitcher(ImageSwitcher *switcherIn);
+    void setNetworkManager(QNetworkAccessManager *networkManagerIn);
 public slots:
     void checkWindowSize();
+private slots:
+  void fileDownloaded(QNetworkReply* pReply);
 private:
     Ui::MainWindow *ui;
 
@@ -43,6 +47,9 @@ private:
     ImageDisplayOptions baseImageOptions;
     bool imageAspectMatchesMonitor = false;
     ImageDetails currentImage;
+    QByteArray downloadedData;
+    QNetworkAccessManager *networkManager = nullptr;
+    QNetworkReply *pendingReply = nullptr;
     bool debugMode = false;
     QSize lastScreenSize = {0,0};
 

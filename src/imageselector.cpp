@@ -146,6 +146,9 @@ bool ImageSelector::imageInsideTimeWindow(const QVector<DisplayTimeWindow> &time
 
 bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
 {
+  if(imageDetails.filename.find("https://") != std::string::npos)
+    return imageInsideTimeWindow(imageDetails.options.timeWindows);
+
   if(!QFileInfo::exists(QString(imageDetails.filename.c_str())))
   {
     if(debugMode)
@@ -245,9 +248,16 @@ const ImageDetails ShuffleImageSelector::getNextImage(const ImageDisplayOptions 
   {
     return imageDetails;
   }
+  bool bReloadedImages = false;
   imageDetails = populateImageDetails(pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString()), baseOptions);
   current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
   while(!imageMatchesFilter(imageDetails)) {
+    if(current_image_shuffle >= images.size()) {
+      // don't keep looping
+      if(bReloadedImages == true)
+        return ImageDetails();
+      bReloadedImages = true;
+    }
     reloadImagesIfNoneLeft();
     imageDetails = populateImageDetails(pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString()),baseOptions);
     current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
@@ -300,8 +310,16 @@ const ImageDetails SortedImageSelector::getNextImage(const ImageDisplayOptions &
   {
     return imageDetails;
   }
+  bool bReloadedImages = false;
   imageDetails = populateImageDetails(pathTraverser->getImagePath(images.takeFirst().toStdString()), baseOptions);
   while(!imageMatchesFilter(imageDetails)) {
+    if (images.size() == 0) {
+      // don't keep looping
+      if(bReloadedImages == true)
+        return ImageDetails();
+      bReloadedImages = true;
+    }
+
     reloadImagesIfEmpty();
     imageDetails = populateImageDetails(pathTraverser->getImagePath(images.takeFirst().toStdString()), baseOptions);
   }

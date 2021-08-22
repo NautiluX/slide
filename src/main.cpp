@@ -6,6 +6,7 @@
 #include "appconfig.h"
 
 #include <QApplication>
+#include <QNetworkAccessManager>
 #include <iostream>
 #include <sys/file.h>
 #include <errno.h>
@@ -128,10 +129,14 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
   w.setBaseOptions(appConfig.baseDisplayOptions);
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, const bool debugMode)
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, QNetworkAccessManager& networkManagerIn, const bool debugMode)
 {
   std::unique_ptr<PathTraverser> pathTraverser;
-  if (!path.imageList.empty())
+  if (!path.rssFeedURL.empty())
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new RedditRSSFeedPathTraverser(path.rssFeedURL, networkManagerIn, debugMode));
+  }
+  else if (!path.imageList.empty())
   {
     pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(path.imageList, debugMode));
   }
@@ -161,18 +166,18 @@ std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, const
   return selector;
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
+std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig, QNetworkAccessManager& networkManagerIn)
 {
   if(appConfig.paths.count()==1)
   {
-    return GetSelectorForConfig(appConfig.paths[0], appConfig.debugMode);
+    return GetSelectorForConfig(appConfig.paths[0], networkManagerIn, appConfig.debugMode);
   }
   else
   {
     std::unique_ptr<ListImageSelector> listSelector(new ListImageSelector());
     for(const auto &path : appConfig.paths)
     {
-      auto selector = GetSelectorForConfig(path, appConfig.debugMode);
+      auto selector = GetSelectorForConfig(path, networkManagerIn, appConfig.debugMode);
       listSelector->AddImageSelector(selector, path.exclusive, path.baseDisplayOptions);
     }
     // new things
@@ -181,7 +186,7 @@ std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
 }
 
 
-void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)
+void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector, QNetworkAccessManager& networkManager)
 {  
   QString jsonFile = getAppConfigFilePath(appConfig.configPath);
   QDir directory;
@@ -198,7 +203,7 @@ void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *sw
     ConfigureWindowFromSettings(w, appConfig);
     if(appConfig.PathOptionsChanged(oldConfig))
     {
-      std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
+      std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig, networkManager);
       switcher->setImageSelector(selector);
     }
 
@@ -233,16 +238,19 @@ int main(int argc, char *argv[])
     std::cout << "Overlay input: " << appConfig.overlay << std::endl;
   }
   
+  QNetworkAccessManager webCtrl; 
+
   MainWindow w;
   ConfigureWindowFromSettings(w, appConfig);
+  w.setNetworkManager(&webCtrl);
   w.show();
 
-  std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
+  std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig, webCtrl);
   selector->setDebugMode(appConfig.debugMode);
   
   ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
   w.setImageSwitcher(&switcher);
-  std::function<void(MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)> reloader = [&appConfig](MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector) { ReloadConfigIfNeeded(appConfig, w, switcher, selector); };
+  std::function<void(MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)> reloader = [&appConfig, &webCtrl](MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector) { ReloadConfigIfNeeded(appConfig, w, switcher, selector, webCtrl); };
   switcher.setConfigFileReloader(reloader);
   switcher.start();
   return a.exec();

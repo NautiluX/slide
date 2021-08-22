@@ -4,6 +4,9 @@
 #include <iostream>
 #include <QDir>
 #include <QStringList>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include "imageselector.h"
 
 static const QStringList supportedFormats={"jpg","jpeg","png","tif","tiff"};
@@ -58,4 +61,27 @@ class ImageListPathTraverser : public PathTraverser
   private:
     QStringList imageList;
 };
+
+class RedditRSSFeedPathTraverser: public QObject, public PathTraverser
+{
+  Q_OBJECT 
+ public:
+    RedditRSSFeedPathTraverser(const std::string& rSSFeedURL,QNetworkAccessManager& networkManager, bool debugModeIn);
+    virtual ~RedditRSSFeedPathTraverser();
+
+    virtual QStringList getImages() const;
+    virtual const std::string getImagePath(const std::string image) const;
+    virtual ImageDisplayOptions UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const;
+
+  private slots:
+    void fileDownloaded(QNetworkReply* pReply);
+  private:
+    void RequestRSSFeed();
+    std::string rssFeedURL;
+    QStringList imageURLS;
+    QNetworkAccessManager& webCtrl; 
+    QNetworkReply *pendingReply = nullptr;
+    QDateTime rssRequestedTime;
+};
+
 #endif // PATHTRAVERSER_H
