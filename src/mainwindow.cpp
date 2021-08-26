@@ -105,13 +105,14 @@ bool MainWindow::event(QEvent* event)
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
    QMainWindow::resizeEvent(event);
-   updateImage(true);
+   this->findChild<QLabel*>("image")->clear();
+   updateImage();
 }
 
 void MainWindow::setImage(std::string path)
 {
     currentImage = path;
-    updateImage(false);
+    updateImage();
 }
 
 int MainWindow::getImageRotation()
@@ -149,14 +150,14 @@ int MainWindow::getImageRotation()
     return degrees;
 }
 
-void MainWindow::updateImage(bool immediately)
+void MainWindow::updateImage()
 {
     if (currentImage == "")
       return;
 
     QLabel *label = this->findChild<QLabel*>("image");
     const QPixmap* oldImage = label->pixmap();
-    if (oldImage != NULL && !immediately)
+    if (oldImage != NULL && transitionSeconds > 0)
     {
       QPalette palette;
       palette.setBrush(QPalette::Background, *oldImage);
@@ -199,13 +200,13 @@ void MainWindow::updateImage(bool immediately)
 
     label->setPixmap(background);
 
-    if (oldImage != NULL && !immediately)
+    if (oldImage != NULL && transitionSeconds > 0)
     {
       auto effect = new QGraphicsOpacityEffect(label);
       effect->setOpacity(0.0);
       label->setGraphicsEffect(effect);
       QPropertyAnimation* animation = new QPropertyAnimation(effect, "opacity");
-      animation->setDuration(1000);
+      animation->setDuration(transitionSeconds*1000);
       animation->setStartValue(0);
       animation->setEndValue(1);
       animation->start(QAbstractAnimation::DeleteWhenStopped);
@@ -340,6 +341,10 @@ void MainWindow::setBackgroundOpacity(unsigned int backgroundOpacity)
 void MainWindow::setOverlayHexRGB(QString overlayHexRGB)
 {
     this->overlayHexRGB = overlayHexRGB;
+
+void MainWindow::setTransitionTime(unsigned int transitionSeconds)
+{
+    this->transitionSeconds = transitionSeconds;
 }
 
 void MainWindow::warn(std::string text)
