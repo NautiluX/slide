@@ -21,7 +21,7 @@ public:
     bool event(QEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     ~MainWindow();
-    void setImage(std::string path);
+    void setImage(std::string path, QPixmap image);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
@@ -32,7 +32,8 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    std::string currentImage;
+    std::string currentImageName;
+    QPixmap currentImage;
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
     char aspect = 'a';

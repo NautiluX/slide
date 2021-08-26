@@ -108,19 +108,20 @@ void MainWindow::resizeEvent(QResizeEvent* event)
    updateImage(true);
 }
 
-void MainWindow::setImage(std::string path)
+void MainWindow::setImage(std::string path, QPixmap image)
 {
-    currentImage = path;
+    currentImageName = path;
+    currentImage = image;
     updateImage(false);
 }
 
 int MainWindow::getImageRotation()
 {
-    if (currentImage == "")
+    if (currentImageName == "")
         return 0;
 
     int orientation = 0;
-    ExifData *exifData = exif_data_new_from_file(currentImage.c_str());
+    ExifData *exifData = exif_data_new_from_file(currentImageName.c_str());
     if (exifData)
     {
       ExifByteOrder byteOrder = exif_data_get_byte_order(exifData);
@@ -151,7 +152,7 @@ int MainWindow::getImageRotation()
 
 void MainWindow::updateImage(bool immediately)
 {
-    if (currentImage == "")
+    if (currentImageName == "")
       return;
 
     QLabel *label = this->findChild<QLabel*>("image");
@@ -163,30 +164,29 @@ void MainWindow::updateImage(bool immediately)
       this->setPalette(palette);
     }
 
-    QPixmap p( currentImage.c_str() );
     if(debugMode)
     {
-      std::cout << "size:" << p.width() << "x" << p.height() << std::endl;
+      std::cout << "size:" << currentImage.width() << "x" << currentImage.height() << std::endl;
     }
 
-    QPixmap rotated = getRotatedPixmap(p);
+    QPixmap rotated = getRotatedPixmap(currentImage);
     QPixmap scaled = getScaledPixmap(rotated);
     QPixmap background = getBlurredBackground(rotated, scaled);
     drawForeground(background, scaled);
     
     if (overlay != NULL)
     {
-      drawText(background, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImage).c_str(), Qt::AlignTop|Qt::AlignLeft);
-      drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage).c_str(), Qt::AlignTop|Qt::AlignRight);
-      drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage).c_str(), Qt::AlignBottom|Qt::AlignLeft);
-      drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage).c_str(), Qt::AlignBottom|Qt::AlignRight);
+      drawText(background, overlay->getMarginTopLeft(), overlay->getFontsizeTopLeft(), overlay->getRenderedTopLeft(currentImageName).c_str(), Qt::AlignTop|Qt::AlignLeft);
+      drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImageName).c_str(), Qt::AlignTop|Qt::AlignRight);
+      drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImageName).c_str(), Qt::AlignBottom|Qt::AlignLeft);
+      drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImageName).c_str(), Qt::AlignBottom|Qt::AlignRight);
       if (debugMode)
       {
         // draw a thumbnail version of the source image in the bottom left, to check for cropping issues
         QPainter pt(&background);
         QBrush brush(QColor(255, 255, 255, 255));
         int margin = 10;
-        QPixmap thumbNail = p.scaledToWidth(200, Qt::SmoothTransformation);
+        QPixmap thumbNail = currentImage.scaledToWidth(200, Qt::SmoothTransformation);
         pt.fillRect(background.width() - thumbNail.width() - 2*margin,
                      background.height()-thumbNail.height() - 2*margin,
                      thumbNail.width() +2*margin, thumbNail.height()+2*margin, brush);
