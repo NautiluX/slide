@@ -15,7 +15,7 @@ class MainWindow;
 class PathTraverser
 {
   public:
-    PathTraverser(const std::string path, bool debugModeIn);
+    PathTraverser(const std::string path);
     virtual ~PathTraverser();
     virtual QStringList getImages() const = 0;
     virtual const std::string getImagePath(const std::string image) const = 0;
@@ -23,7 +23,6 @@ class PathTraverser
 
   protected:
     const std::string path;
-    bool debugMode = false;
     QStringList getImageFormats() const;
     ImageDisplayOptions LoadOptionsForDirectory(const std::string &directoryPath, const ImageDisplayOptions &baseOptions) const;
 };
@@ -31,7 +30,7 @@ class PathTraverser
 class RecursivePathTraverser : public PathTraverser
 {
   public:
-    RecursivePathTraverser(const std::string path, bool debugModeIn);
+    RecursivePathTraverser(const std::string path);
     virtual ~RecursivePathTraverser();
     QStringList getImages() const;
     virtual const std::string getImagePath(const std::string image) const;
@@ -41,7 +40,7 @@ class RecursivePathTraverser : public PathTraverser
 class DefaultPathTraverser : public PathTraverser
 {
   public:
-    DefaultPathTraverser(const std::string path, bool debugModeIn);
+    DefaultPathTraverser(const std::string path);
     virtual ~DefaultPathTraverser();
     QStringList getImages() const;
     virtual const std::string getImagePath(const std::string image) const;
@@ -53,7 +52,7 @@ class DefaultPathTraverser : public PathTraverser
 class ImageListPathTraverser : public PathTraverser
 {
   public:
-    ImageListPathTraverser(const std::string &imageListString, bool debugModeIn);
+    ImageListPathTraverser(const std::string &imageListString);
     virtual ~ImageListPathTraverser();
     QStringList getImages() const;
     virtual const std::string getImagePath(const std::string image) const;
@@ -66,7 +65,7 @@ class RedditRSSFeedPathTraverser: public QObject, public PathTraverser
 {
   Q_OBJECT 
  public:
-    RedditRSSFeedPathTraverser(const std::string& rSSFeedURL,QNetworkAccessManager& networkManager, bool debugModeIn);
+    RedditRSSFeedPathTraverser(const std::string& rSSFeedURL,QNetworkAccessManager& networkManager);
     virtual ~RedditRSSFeedPathTraverser();
 
     virtual QStringList getImages() const;

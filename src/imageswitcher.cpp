@@ -23,7 +23,7 @@ void ImageSwitcher::updateImage()
 {
     if(reloadConfigIfNeeded)
     {
-      reloadConfigIfNeeded(window, this, selector.get());
+      reloadConfigIfNeeded(window, this);
     }
     ImageDetails imageDetails = selector->getNextImage(window.getBaseOptions());
     if (imageDetails.filename == "")
@@ -52,7 +52,7 @@ void ImageSwitcher::scheduleImageUpdate()
   QTimer::singleShot(100, this, SLOT(updateImage())); 
 }
 
-void ImageSwitcher::setConfigFileReloader(std::function<void(MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)> reloadConfigIfNeededIn)
+void ImageSwitcher::setConfigFileReloader(std::function<void(MainWindow &w, ImageSwitcher *switcher)> reloadConfigIfNeededIn)
 {
   reloadConfigIfNeeded = reloadConfigIfNeededIn;
 }

@@ -1,6 +1,7 @@
 #include "imageselector.h"
 #include "pathtraverser.h"
 #include "mainwindow.h"
+#include "logger.h"
 #include <QDirIterator>
 #include <QTimer>
 #include <QApplication>
@@ -20,11 +21,6 @@ ImageSelector::ImageSelector(std::unique_ptr<PathTraverser>& pathTraverserIn):
 ImageSelector::ImageSelector() {}
 
 ImageSelector::~ImageSelector(){}
-
-void ImageSelector::setDebugMode(bool debugModeIn) 
-{ 
-  debugMode = debugModeIn;
-}
 
 int ReadExifTag(ExifData* exifData, ExifTag tag, bool shortRead = false)
 {
@@ -133,12 +129,12 @@ bool ImageSelector::imageInsideTimeWindow(const QVector<DisplayTimeWindow> &time
       return true;
     }
   }
-  if(debugMode && timeWindows.count() > 0)
+  if(ShouldLog() && timeWindows.count() > 0)
   {
-    std::cout << "image display time outside windows: " << std::endl;
+    Log( "image display time outside window: ");
     for(auto &timeWindow : timeWindows) 
     {
-      std::cout << "time: " << timeWindow.startDisplay.toString().toStdString() << "-" << timeWindow.endDisplay.toString().toStdString() << std::endl;
+      Log("time: ", timeWindow.startDisplay.toString().toStdString(), "-", timeWindow.endDisplay.toString().toStdString());
     }
   }
   return false;
@@ -151,19 +147,13 @@ bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
 
   if(!QFileInfo::exists(QString(imageDetails.filename.c_str())))
   {
-    if(debugMode)
-    {
-      std::cout << "file not found: " << imageDetails.filename << std::endl;
-    }
+    Log("file not found: ", imageDetails.filename);
     return false;
   }
 
   if(!imageValidForAspect(imageDetails)) 
   {
-    if(debugMode)
-    {
-      std::cout << "image aspect ratio doesn't match filter '" << imageDetails.options.onlyAspect << "' : " << imageDetails.filename << std::endl;
-    }
+    Log("image aspect ratio doesn't match filter '", imageDetails.options.onlyAspect, "' : ", imageDetails.filename);
     return false;
   }
 
@@ -217,10 +207,7 @@ const ImageDetails RandomImageSelector::getNextImage(const ImageDisplayOptions &
 
 unsigned int RandomImageSelector::selectRandom(const QStringList& images) const
 {
-  if(debugMode)
-  {
-    std::cout << "images: " << images.size() << std::endl;
-  }
+  Log("images: ", images.size());
   if (images.size() == 0)
   {
     throw std::string("No jpg images found in given folder");
@@ -335,11 +322,11 @@ void SortedImageSelector::reloadImagesIfEmpty()
   {
     images = pathTraverser->getImages();
     std::sort(images.begin(), images.end());
-    if(debugMode)
+    if(ShouldLog())
     {
-      std::cout << "read " << images.size() << " images." << std::endl;
+      Log( "read ", images.size(), " images.");
       for (int i = 0;i <images.size();i++){
-          std::cout << images[i].toStdString() << std::endl;
+          Log(images[i].toStdString());
       }
     }
   }

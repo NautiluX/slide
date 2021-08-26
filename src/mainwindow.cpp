@@ -2,6 +2,7 @@
 #include "overlay.h"
 #include "ui_mainwindow.h"
 #include "imageswitcher.h"
+#include "logger.h"
 #include <QLabel>
 #include <QPixmap>
 #include <QBitmap>
@@ -130,10 +131,7 @@ void MainWindow::checkWindowSize()
     QSize screenSize = screen->geometry().size();
     if(size() != screenSize)
     {
-      if(debugMode)
-      {
-        std::cout << "Resizing Window" << screenSize.width() << "," << screenSize.height() << std::endl;
-      }
+      Log("Resizing Window", screenSize.width(), "," , screenSize.height() );
       setFixedSize(screenSize);
       updateImage(true);
     }
@@ -144,10 +142,7 @@ void MainWindow::checkWindowSize()
       ImageAspect newAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait;
       if (newAspect != baseImageOptions.onlyAspect)
       {
-        if(debugMode)
-        {
-          std::cout << "Changing image orientation to " << newAspect << std::endl;
-        }
+        Log("Changing image orientation to ", newAspect);
         baseImageOptions.onlyAspect = newAspect;
         currentImage.filename = "";
         warn("Monitor aspect changed, updating image...");
@@ -237,10 +232,7 @@ void MainWindow::updateImage(bool immediately)
       p.load( currentImage.filename.c_str() );
     }
 
-    if(debugMode)
-    {
-      std::cout << "size:" << p.width() << "x" << p.height() << "(window:" << width() << "," << height() << ")" << std::endl;
-    }
+    Log("size:", p.width(), "x", p.height(), "(window:", width(), ",", height(), ")");
 
     QPixmap rotated = getRotatedPixmap(p);
     QPixmap scaled = getScaledPixmap(rotated);
@@ -253,7 +245,7 @@ void MainWindow::updateImage(bool immediately)
       drawText(background, overlay->getMarginTopRight(), overlay->getFontsizeTopRight(), overlay->getRenderedTopRight(currentImage.filename).c_str(), Qt::AlignTop|Qt::AlignRight);
       drawText(background, overlay->getMarginBottomLeft(), overlay->getFontsizeBottomLeft(), overlay->getRenderedBottomLeft(currentImage.filename).c_str(), Qt::AlignBottom|Qt::AlignLeft);
       drawText(background, overlay->getMarginBottomRight(), overlay->getFontsizeBottomRight(), overlay->getRenderedBottomRight(currentImage.filename).c_str(), Qt::AlignBottom|Qt::AlignRight);
-      if (debugMode)
+      if (ShouldLog())
       {
         // draw a thumbnail version of the source image in the bottom left, to check for cropping issues
         QPainter pt(&background);
@@ -288,7 +280,6 @@ void MainWindow::updateImage(bool immediately)
 }
 
 void MainWindow::drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment) {
-  //std::cout << "text: " << text.toStdString()  << " margin: " << margin << " fontsize: " << fontsize<< std::endl;
   QPainter pt(&image);
   pt.setPen(QPen(Qt::white));
   pt.setFont(QFont("Sans", fontsize, QFont::Bold));
@@ -424,11 +415,6 @@ void MainWindow::setBaseOptions(const ImageDisplayOptions &baseOptionsIn)
 void MainWindow::setImageSwitcher(ImageSwitcher *switcherIn)
 {
    switcher = switcherIn; 
-}
-
-void MainWindow::setDebugMode(bool debugModeIn) 
-{
-  debugMode = debugModeIn;
 }
 
 const ImageDisplayOptions &MainWindow::getBaseOptions() 

@@ -1,4 +1,5 @@
 #include "appconfig.h"
+#include "logger.h"
 
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -47,7 +48,7 @@ void SetJSONBool(bool &value, QJsonObject jsonDoc, const char *key) {
   }
 }
 
-Config loadConfiguration(const std::string &configFilePath, const Config &currentConfig, bool debugMode) {
+Config loadConfiguration(const std::string &configFilePath, const Config &currentConfig) {
   QString jsonFile(configFilePath.c_str());
   QDir directory;
   if(!directory.exists(jsonFile))
@@ -57,10 +58,7 @@ Config loadConfiguration(const std::string &configFilePath, const Config &curren
 
   Config userConfig = currentConfig;
 
-  if(debugMode)
-  {
-    std::cout << "Found options file: " << jsonFile.toStdString() << std::endl;
-  }
+  Log( "Found options file: ", jsonFile.toStdString() );
 
   QString val;
   QFile file;
@@ -222,7 +220,7 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
     return commandLineConfig;
   }
 
-  AppConfig loadedConfig = loadConfiguration(jsonFile.toStdString(), commandLineConfig, commandLineConfig.debugMode);
+  AppConfig loadedConfig = loadConfiguration(jsonFile.toStdString(), commandLineConfig);
   
   QString val;
   QFile file;
@@ -273,12 +271,12 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
   return loadedConfig;
 }
 
-Config getConfigurationForFolder(const std::string &folderPath, const Config &currentConfig, bool debugMode) {
+Config getConfigurationForFolder(const std::string &folderPath, const Config &currentConfig) {
   QDir directory(folderPath.c_str());
   QString jsonFile = directory.filePath(QString("options.json"));
   if(directory.exists(jsonFile))
   {
-      return loadConfiguration(jsonFile.toStdString(), currentConfig, debugMode );
+      return loadConfiguration(jsonFile.toStdString(), currentConfig );
   }
   return currentConfig;
 }

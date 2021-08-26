@@ -1,6 +1,7 @@
 #include "pathtraverser.h"
 #include "mainwindow.h"
 #include "appconfig.h"
+#include "logger.h"
 
 #include <QDirIterator>
 #include <QDir>
@@ -11,8 +12,8 @@
 #include <stdlib.h>     /* srand, rand */
 
 
-PathTraverser::PathTraverser(const std::string path, bool debugModeIn):
-  path(path), debugMode(debugModeIn)
+PathTraverser::PathTraverser(const std::string path):
+  path(path)
 {}
 
 PathTraverser::~PathTraverser() {}
@@ -28,11 +29,11 @@ ImageDisplayOptions PathTraverser::LoadOptionsForDirectory(const std::string &di
 {
   Config baseConfig;
   baseConfig.baseDisplayOptions = baseOptions;
-  return getConfigurationForFolder(directoryPath, baseConfig, debugMode).baseDisplayOptions;
+  return getConfigurationForFolder(directoryPath, baseConfig).baseDisplayOptions;
 }
 
-RecursivePathTraverser::RecursivePathTraverser(const std::string path,bool debugMode):
-  PathTraverser(path,debugMode)
+RecursivePathTraverser::RecursivePathTraverser(const std::string path):
+  PathTraverser(path)
 {}
 
 RecursivePathTraverser::~RecursivePathTraverser() {}
@@ -61,8 +62,8 @@ ImageDisplayOptions RecursivePathTraverser::UpdateOptionsForImage(const std::str
   return LoadOptionsForDirectory(d.absolutePath().toStdString(), baseOptions);
 }
 
-DefaultPathTraverser::DefaultPathTraverser(const std::string path,bool debugMode):
-  PathTraverser(path,debugMode),
+DefaultPathTraverser::DefaultPathTraverser(const std::string path):
+  PathTraverser(path),
   directory(path.c_str())
 {}
 
@@ -85,8 +86,8 @@ ImageDisplayOptions DefaultPathTraverser::UpdateOptionsForImage(const std::strin
   return LoadOptionsForDirectory(directory.absolutePath().toStdString(), baseOptions);
 }
 
-ImageListPathTraverser::ImageListPathTraverser(const std::string &imageListString,bool debugMode):
-  PathTraverser("",debugMode)
+ImageListPathTraverser::ImageListPathTraverser(const std::string &imageListString):
+  PathTraverser("")
 {
   QString str = QString(imageListString.c_str());
   imageList = str.split(QLatin1Char(','));
@@ -114,8 +115,8 @@ ImageDisplayOptions ImageListPathTraverser::UpdateOptionsForImage(const std::str
 }
 
 
-RedditRSSFeedPathTraverser::RedditRSSFeedPathTraverser(const std::string& rssFeedURLIn, QNetworkAccessManager& networkManager, bool debugModeIn) :
-  PathTraverser("",debugModeIn), rssFeedURL(rssFeedURLIn), webCtrl(networkManager)
+RedditRSSFeedPathTraverser::RedditRSSFeedPathTraverser(const std::string& rssFeedURLIn, QNetworkAccessManager& networkManager) :
+  PathTraverser(""), rssFeedURL(rssFeedURLIn), webCtrl(networkManager)
 {
   connect( &webCtrl, SIGNAL (finished(QNetworkReply*)), this, SLOT (fileDownloaded(QNetworkReply*)));
   RequestRSSFeed();
@@ -131,10 +132,7 @@ void RedditRSSFeedPathTraverser::RequestRSSFeed()
   {
     pendingReply->abort();
   }
-  if (debugMode)
-  {
-    std::cout << "Requesting RSS feed:" << rssFeedURL << std::endl;
-  }
+  Log("Requesting RSS feed:", rssFeedURL);
   rssRequestedTime = QDateTime::currentDateTime();
   QNetworkRequest request(QUrl(rssFeedURL.c_str()));
   pendingReply = webCtrl.get(request);
@@ -159,10 +157,7 @@ void RedditRSSFeedPathTraverser::fileDownloaded(QNetworkReply* netReply)
   netReply->deleteLater();
   if (!vt.isNull())
   {
-    if (debugMode)
-    {
-      std::cout << "Redirected to:" << vt.toUrl().toString().toStdString() << std::endl;
-    }
+    Log("Redirected to:", vt.toUrl().toString().toStdString());
     webCtrl.get(QNetworkRequest(vt.toUrl()));
   }
   else
@@ -171,10 +166,7 @@ void RedditRSSFeedPathTraverser::fileDownloaded(QNetworkReply* netReply)
     QString error;
     if (!doc.setContent(str, false, &error))
     {
-      if (debugMode)
-      {
-        std::cout << "Failed to load page:" << error.toStdString() << std::endl;
-      }
+      Log("Failed to load page:", error.toStdString());
     }
     else
     {

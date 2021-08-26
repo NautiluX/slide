@@ -4,6 +4,7 @@
 #include "pathtraverser.h"
 #include "overlay.h"
 #include "appconfig.h"
+#include "logger.h"
 
 #include <QApplication>
 #include <QNetworkAccessManager>
@@ -123,30 +124,28 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
       w.setBackgroundOpacity(appConfig.backgroundOpacity);
   }
   std::unique_ptr<Overlay> o = std::unique_ptr<Overlay>(new Overlay(appConfig.overlay));
-  o->setDebugMode(appConfig.debugMode);
-  w.setDebugMode(appConfig.debugMode);
   w.setOverlay(o);
   w.setBaseOptions(appConfig.baseDisplayOptions);
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, QNetworkAccessManager& networkManagerIn, const bool debugMode)
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, QNetworkAccessManager& networkManagerIn)
 {
   std::unique_ptr<PathTraverser> pathTraverser;
   if (!path.rssFeedURL.empty())
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RedditRSSFeedPathTraverser(path.rssFeedURL, networkManagerIn, debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new RedditRSSFeedPathTraverser(path.rssFeedURL, networkManagerIn));
   }
   else if (!path.imageList.empty())
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(path.imageList, debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(path.imageList));
   }
   else if (path.recursive)
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path.path, debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path.path));
   }
   else
   {
-    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path.path, debugMode));
+    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path.path));
   }
 
   std::unique_ptr<ImageSelector> selector;
@@ -170,14 +169,14 @@ std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig, QNe
 {
   if(appConfig.paths.count()==1)
   {
-    return GetSelectorForConfig(appConfig.paths[0], networkManagerIn, appConfig.debugMode);
+    return GetSelectorForConfig(appConfig.paths[0], networkManagerIn);
   }
   else
   {
     std::unique_ptr<ListImageSelector> listSelector(new ListImageSelector());
     for(const auto &path : appConfig.paths)
     {
-      auto selector = GetSelectorForConfig(path, networkManagerIn, appConfig.debugMode);
+      auto selector = GetSelectorForConfig(path, networkManagerIn);
       listSelector->AddImageSelector(selector, path.exclusive, path.baseDisplayOptions);
     }
     // new things
@@ -186,7 +185,7 @@ std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig, QNe
 }
 
 
-void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector, QNetworkAccessManager& networkManager)
+void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, QNetworkAccessManager& networkManager)
 {  
   QString jsonFile = getAppConfigFilePath(appConfig.configPath);
   QDir directory;
@@ -207,7 +206,6 @@ void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *sw
       switcher->setImageSelector(selector);
     }
 
-    selector->setDebugMode(appConfig.debugMode);
     switcher->setRotationTime(appConfig.rotationSeconds * 1000);
   }
 }
@@ -231,12 +229,9 @@ int main(int argc, char *argv[])
     usage(argv[0]);
     return 1;
   }
-
-  if(appConfig.debugMode)
-  {
-    std::cout << "Rotation Time: " << appConfig.rotationSeconds << std::endl;
-    std::cout << "Overlay input: " << appConfig.overlay << std::endl;
-  }
+  SetupLogger(appConfig.debugMode);
+  Log( "Rotation Time: ", appConfig.rotationSeconds );
+  Log( "Overlay input: ", appConfig.overlay );
   
   QNetworkAccessManager webCtrl; 
 
@@ -246,11 +241,10 @@ int main(int argc, char *argv[])
   w.show();
 
   std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig, webCtrl);
-  selector->setDebugMode(appConfig.debugMode);
   
   ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
   w.setImageSwitcher(&switcher);
-  std::function<void(MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector)> reloader = [&appConfig, &webCtrl](MainWindow &w, ImageSwitcher *switcher, ImageSelector *selector) { ReloadConfigIfNeeded(appConfig, w, switcher, selector, webCtrl); };
+  std::function<void(MainWindow &w, ImageSwitcher *switcher)> reloader = [&appConfig, &webCtrl](MainWindow &w, ImageSwitcher *switcher) { ReloadConfigIfNeeded(appConfig, w, switcher, webCtrl); };
   switcher.setConfigFileReloader(reloader);
   switcher.start();
   return a.exec();

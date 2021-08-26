@@ -17,15 +17,13 @@ public:
     ImageSelector(); // use case for when you don't own your own traverser
     virtual ~ImageSelector();
     virtual const ImageDetails getNextImage(const ImageDisplayOptions &baseOptions) = 0;
-    void setDebugMode(bool debugModeIn);
-
+ 
 protected:
     ImageDetails populateImageDetails(const std::string&filename, const ImageDisplayOptions &baseOptions);
     bool imageValidForAspect(const ImageDetails& imageDetails);
     bool imageMatchesFilter(const ImageDetails& imageDetails);
     bool imageInsideTimeWindow(const QVector<DisplayTimeWindow> &timeWindows);
     std::unique_ptr<PathTraverser> pathTraverser;
-    bool debugMode = false;
 };
 
 class RandomImageSelector : public ImageSelector

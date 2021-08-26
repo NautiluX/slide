@@ -30,7 +30,6 @@ public:
     void setBackgroundOpacity(unsigned int opacity);
     void warn(std::string text);
     void setOverlay(std::unique_ptr<Overlay> &overlay);
-    void setDebugMode(bool debugModeIn);
     void setBaseOptions(const ImageDisplayOptions &baseOptionsIn);
     const ImageDisplayOptions &getBaseOptions();
     void setImageSwitcher(ImageSwitcher *switcherIn);
@@ -50,7 +49,6 @@ private:
     QByteArray downloadedData;
     QNetworkAccessManager *networkManager = nullptr;
     QNetworkReply *pendingReply = nullptr;
-    bool debugMode = false;
     QSize lastScreenSize = {0,0};
 
     std::unique_ptr<Overlay> overlay;

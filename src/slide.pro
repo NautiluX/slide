@@ -5,7 +5,9 @@
 #-------------------------------------------------
 
 QT       += core gui network xml
-CONFIG += qt debug
+CONFIG += qt 
+CONFIG += debug
+CONFIG += c++1z
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -35,7 +37,8 @@ SOURCES += \
         pathtraverser.cpp \
         overlay.cpp \
         imageselector.cpp \
-        appconfig.cpp
+        appconfig.cpp \
+        logger.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -44,7 +47,8 @@ HEADERS += \
         overlay.h \
         imageswitcher.h \
         imagestructs.h \
-        appconfig.h
+        appconfig.h \
+        logger.h
 
 FORMS += \
         mainwindow.ui

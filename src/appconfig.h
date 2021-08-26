@@ -77,7 +77,7 @@ struct AppConfig : public Config {
 };
 
 AppConfig loadAppConfiguration(const AppConfig &commandLineConfig);
-Config getConfigurationForFolder(const std::string &folderPath, const Config &currentConfig, bool debugMode);
+Config getConfigurationForFolder(const std::string &folderPath, const Config &currentConfig);
 
 ImageAspect parseAspectFromString(char aspect);
 QString getAppConfigFilePath(const std::string &configPath);
