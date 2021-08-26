@@ -39,7 +39,7 @@ private:
     bool debugMode = false;
     bool fitAspectAxisToWindow = false;
 
-    Overlay* overlay;
+    Overlay* overlay = NULL;
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 

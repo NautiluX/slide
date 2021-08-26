@@ -138,9 +138,14 @@ int main(int argc, char *argv[])
     std::cout << "Rotation Time: " << rotationSeconds << std::endl;
     std::cout << "Overlay input: " << overlay << std::endl;
   }
+
   Overlay o(overlay);
   o.setDebugMode(debugMode);
-  w.setOverlay(&o);
+  if (!overlay.empty())
+  {
+    w.setOverlay(&o);
+  }
+
   w.setAspect(aspect);
   w.setDebugMode(debugMode);
   w.setFitAspectAxisToWindow(fitAspectAxisToWindow);
