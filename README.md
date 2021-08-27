@@ -66,11 +66,45 @@ The file format is:
    "stretch": false,
    "rotationSeconds" : 300,
    "opacity" : 200,
-   "debug" : false
+   "debug" : false,
+   "scheduler" : [
+      {
+         "exclusive" : true,
+         "redditrss" : "https://www.reddit.com/r/earthporn/.rss?limit=100",
+         "stretch" : true,
+         "times": [
+            {
+                "start": "14:00",
+                "end": "16:00"
+            }
+         ]
+      },
+      { 
+         "exclusive" : true,
+         "stretch" : false,
+         "times": [
+            {
+                "start": "08:00",
+                "end": "10:00"
+            },
+            {
+                "start": "16:00",
+                "end": "19:00"
+            }
+         ],
+         "path" : "/path/to/pictures/show_peak_times/"
+      },
+      {
+               "path" : "/path/to/pictures/always_show_1"
+      },
+      {
+               "path" : "/path/to/pictures/always_show_2"
+      }
+
 }
 ```
 Supported keys and values in the JSON configuration are:
-* `path` : where to search for images (.jpg files)
+* `path` : where to search for images (.jpg files). This path is ignored if the `scheduler` feature is used.
 * `aspect` : the same as the command line argument
 * `overlay` : the same as the overlay command line argument
 * `shuffle` : set to true to enable shuffle mode for file display
@@ -81,6 +115,12 @@ Supported keys and values in the JSON configuration are:
 * `opacity` : the same as the command line `-o` argument
 * `blur` : the same as the command line `-b` argument
 * `debug` : set to true to enable verbose output from the program
+* `scheduler` : this entry is an array of possible path values and associated settings. This key lets you manage display times/settings for a collection of paths. In the example above the top entry shows ONLY files from a Redit RSS feed between 2 and 4pm, ONLY files from the `show_peak_times` folder from 8am to 10am and then 4pm to 7pm. At all other times it alternates displaying files in the `always_show_1` and `always_show_2` folder.
+   * `exclusive` : When set to `true` only this entry will be used when it is in its valid time window. 
+   * `times` : times is a JSON array of start and end times in which it is valid to display this image. The time is in the format HH:MM:SS and is based on the systems local time. If `start` isn't defined then it defaults to the start of the day, if `end` isn't defined it defaults to the end of the day.
+   * `path` : the path to image files
+   * `stretch` : as above
+   * `redditrss` : the path to a ReditRSS feed from which images will be selected. This is designed for the EarthPorn page and others like it and is highly dependent on the Redit RSS syntax.
 
 ## Folder Options file
 When using the default or recursive folder mode we support having per folder display options. The options are stored in a file called "options.json" in the images folder and support a subset of the applications configuration settings:
@@ -88,7 +128,6 @@ When using the default or recursive folder mode we support having per folder dis
 {
    "stretch": false,
    "aspect" : "m",
-   "rotationSeconds" : 300,
    "opacity" : 200,
    "blur" : 20,
    "times": [
@@ -104,7 +143,7 @@ When using the default or recursive folder mode we support having per folder dis
 }
 ```
 See the `Configuration File` section for details of each setting.
-* `times` : times is a JSON array of start and end times in which it is valid to display this image. The time is in the format HH:MM:SS and is based on the systems local time. If `start` isn't defined then it defaults to the start of the day, if `end` isn't default it defaults to the end of the day.
+
 
 ## Dependencies
 
