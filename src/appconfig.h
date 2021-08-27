@@ -18,7 +18,6 @@ struct Config {
 struct PathEntry {
   std::string path = "";
   std::string imageList = "";
-  std::string rssFeedURL = "";
   bool exclusive = false; // only use this entry when it is valid, skip others
 
   bool recursive = false;
@@ -38,7 +37,7 @@ struct PathEntry {
       return true;
     if(b.baseDisplayOptions.fitAspectAxisToWindow != baseDisplayOptions.fitAspectAxisToWindow)
       return true;
-    if (b.path != path || b.imageList != imageList || b.rssFeedURL != rssFeedURL)
+    if (b.path != path || b.imageList != imageList)
       return true;
     if (b.baseDisplayOptions.timeWindows.count() != baseDisplayOptions.timeWindows.count())
       return true;

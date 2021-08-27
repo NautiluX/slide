@@ -131,11 +131,7 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
 std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, QNetworkAccessManager& networkManagerIn)
 {
   std::unique_ptr<PathTraverser> pathTraverser;
-  if (!path.rssFeedURL.empty())
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RedditRSSFeedPathTraverser(path.rssFeedURL, networkManagerIn));
-  }
-  else if (!path.imageList.empty())
+  if (!path.imageList.empty())
   {
     pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(path.imageList));
   }

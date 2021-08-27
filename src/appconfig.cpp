@@ -178,10 +178,6 @@ QVector<PathEntry> parsePathEntry(QJsonObject &jsonMainDoc, bool baseRecursive, 
       if(!imageListString.empty()) {
         entry.imageList = imageListString;
       }
-      std::string rssFeedURLString = ParseJSONString(schedulerJson, "redditrss");
-      if(!rssFeedURLString.empty()) {
-        entry.rssFeedURL = rssFeedURLString;
-      }
 
       SetJSONBool(entry.exclusive, schedulerJson, "exclusive");
 
@@ -259,11 +255,6 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
     if(!imageListString.empty())
     {
       entry.imageList = imageListString;
-    }
-    std::string rssFeedURLString = ParseJSONString(jsonDoc, "redditrss");
-    if(!rssFeedURLString.empty())
-    {
-      entry.rssFeedURL = rssFeedURLString;
     }
     loadedConfig.paths.append(entry);
   }

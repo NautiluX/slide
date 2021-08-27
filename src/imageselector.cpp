@@ -142,9 +142,6 @@ bool ImageSelector::imageInsideTimeWindow(const QVector<DisplayTimeWindow> &time
 
 bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
 {
-  if(imageDetails.filename.find("https://") != std::string::npos)
-    return imageInsideTimeWindow(imageDetails.options.timeWindows);
-
   if(!QFileInfo::exists(QString(imageDetails.filename.c_str())))
   {
     Log("file not found: ", imageDetails.filename);
