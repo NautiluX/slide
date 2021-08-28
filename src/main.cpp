@@ -4,6 +4,7 @@
 #include "pathtraverser.h"
 #include "overlay.h"
 #include <QApplication>
+#include <QRegularExpression>
 #include <iostream>
 #include <sys/file.h>
 #include <errno.h>
@@ -35,15 +36,18 @@ int main(int argc, char *argv[])
   bool fitAspectAxisToWindow = false;
   std::string valid_aspects = "alp"; // all, landscape, portait
   std::string overlay = "";
+  QString overlayHexRGB = QString();
+  QRegularExpression hexRGBMatcher("^#([0-9A-Fa-f]{3}){1,2}$");
   int debugInt = 0;
   int stretchInt = 0;
   static struct option long_options[] =
   {
-    {"verbose", no_argument,       &debugInt, 1},
-    {"stretch", no_argument,       &stretchInt, 1},
+    {"verbose",       no_argument,       &debugInt,   1},
+    {"stretch",       no_argument,       &stretchInt, 1},
+    {"overlay-color", required_argument, 0,           'c'},
   };
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:rsSv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:c:a:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 0:
           /* If this option set a flag, do nothing else now. */
@@ -85,6 +89,9 @@ int main(int argc, char *argv[])
       case 'O':
         overlay = optarg;
         break;
+      case 'c':
+        overlayHexRGB = QString::fromStdString(optarg);
+        break;
       case 'v':
         debugMode = true;
         break;
@@ -107,6 +114,16 @@ int main(int argc, char *argv[])
     std::cout << "Error: Path expected." << std::endl;
     usage(argv[0]);
     return 1;
+  }
+
+  if (!overlayHexRGB.isEmpty())
+  {
+    if(!hexRGBMatcher.match(overlayHexRGB).hasMatch())
+    {
+      std::cout << "Error: hex rgb string expected. e.g. #FFFFFF or #FFF" << std::endl;
+      return 1;
+    }
+    w.setOverlayHexRGB(overlayHexRGB);
   }
 
   std::unique_ptr<PathTraverser> pathTraverser;
