@@ -18,7 +18,6 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_pt
     selector(selector),
     timer(this)
 {
-    future = new QFuture<void>;
     watcher = new QFutureWatcher<void>;
     connect(this, SIGNAL(imageUpdated()), this, SLOT(getNextImageThread()), Qt::QueuedConnection);
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateImage()));
@@ -41,13 +40,16 @@ void ImageSwitcher::getNextImage()
 
 void ImageSwitcher::getNextImageThread()
 {
-    *future = QtConcurrent::run(this, &ImageSwitcher::getNextImage);
-    watcher->setFuture(*future);
+    watcher->setFuture(QtConcurrent::run(this, &ImageSwitcher::getNextImage));
 }
 
 
 void ImageSwitcher::updateImage()
 {
+    while (watcher->isRunning())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
     window.setImage(nextImageName, nextImage);
     emit imageUpdated();
 }
