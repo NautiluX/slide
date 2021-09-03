@@ -34,12 +34,10 @@ int ReadExifTag(ExifData* exifData, ExifTag tag, bool shortRead = false)
   {
     if (shortRead)
     {
-      value = exif_get_short(exifEntry->data, byteOrder);
+      return exif_get_short(exifEntry->data, byteOrder);
     }
-    else
-    {
-      value = exif_get_long(exifEntry->data, byteOrder);
-    }
+    
+    return exif_get_long(exifEntry->data, byteOrder);
   }
   return value;
 }
