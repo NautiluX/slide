@@ -128,7 +128,7 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
   w.setBaseOptions(appConfig.baseDisplayOptions);
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, QNetworkAccessManager& networkManagerIn)
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path)
 {
   std::unique_ptr<PathTraverser> pathTraverser;
   if (!path.imageList.empty())
@@ -161,18 +161,18 @@ std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path, QNetw
   return selector;
 }
 
-std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig, QNetworkAccessManager& networkManagerIn)
+std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
 {
   if(appConfig.paths.count()==1)
   {
-    return GetSelectorForConfig(appConfig.paths[0], networkManagerIn);
+    return GetSelectorForConfig(appConfig.paths[0]);
   }
   else
   {
     std::unique_ptr<ListImageSelector> listSelector(new ListImageSelector());
     for(const auto &path : appConfig.paths)
     {
-      auto selector = GetSelectorForConfig(path, networkManagerIn);
+      auto selector = GetSelectorForConfig(path);
       listSelector->AddImageSelector(selector, path.exclusive, path.baseDisplayOptions);
     }
     // new things
@@ -181,7 +181,7 @@ std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig, QNe
 }
 
 
-void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher, QNetworkAccessManager& networkManager)
+void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher)
 {  
   QString jsonFile = getAppConfigFilePath(appConfig.configPath);
   QDir directory;
@@ -198,7 +198,7 @@ void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *sw
     ConfigureWindowFromSettings(w, appConfig);
     if(appConfig.PathOptionsChanged(oldConfig))
     {
-      std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig, networkManager);
+      std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
       switcher->setImageSelector(selector);
     }
 
@@ -236,11 +236,11 @@ int main(int argc, char *argv[])
   w.setNetworkManager(&webCtrl);
   w.show();
 
-  std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig, webCtrl);
+  std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
   
   ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
   w.setImageSwitcher(&switcher);
-  std::function<void(MainWindow &w, ImageSwitcher *switcher)> reloader = [&appConfig, &webCtrl](MainWindow &w, ImageSwitcher *switcher) { ReloadConfigIfNeeded(appConfig, w, switcher, webCtrl); };
+  std::function<void(MainWindow &w, ImageSwitcher *switcher)> reloader = [&appConfig](MainWindow &w, ImageSwitcher *switcher) { ReloadConfigIfNeeded(appConfig, w, switcher); };
   switcher.setConfigFileReloader(reloader);
   switcher.start();
   return a.exec();
