@@ -8,36 +8,53 @@
 #include <memory>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
+#include <chrono>
+#include <thread>
 
 ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_ptr<ImageSelector>& selector):
     QObject::QObject(),
     window(w),
     timeout(timeout),
     selector(selector),
-    timer(this),
-    timerNoContent(this)
+    timer(this)
 {
+    watcher = new QFutureWatcher<void>;
+    connect(this, SIGNAL(imageUpdated()), this, SLOT(getNextImageThread()), Qt::QueuedConnection);
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateImage()));
+
+    getNextImage();
+    updateImage();
 }
+
+void ImageSwitcher::getNextImage()
+{
+    nextImageName = selector->getNextImage();
+
+    while (nextImageName.empty())
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        nextImageName = selector->getNextImage();
+    }
+    nextImage = QPixmap(nextImageName.c_str());
+}
+
+void ImageSwitcher::getNextImageThread()
+{
+    watcher->setFuture(QtConcurrent::run(this, &ImageSwitcher::getNextImage));
+}
+
 
 void ImageSwitcher::updateImage()
 {
-    std::string filename(selector->getNextImage());
-    if (filename == "")
+    while (watcher->isRunning())
     {
-      window.warn("No image found.");
-      timerNoContent.start(timeoutNoContent);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    else
-    {
-      window.setImage(filename);
-      timerNoContent.stop(); // we have loaded content so stop the fast polling
-    }
+    window.setImage(nextImageName, nextImage);
+    emit imageUpdated();
 }
 
 void ImageSwitcher::start()
 {
-    updateImage();
-    connect(&timer, SIGNAL(timeout()), this, SLOT(updateImage()));
-    connect(&timerNoContent, SIGNAL(timeout()), this, SLOT(updateImage()));
     timer.start(timeout);
 }

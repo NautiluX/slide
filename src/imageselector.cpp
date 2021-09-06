@@ -131,7 +131,7 @@ std::string RandomImageSelector::getNextImage()
   {
     std::cerr << "Error: " << err << std::endl;
   }
-  std::cout << "updating image: " << filename << std::endl;
+  std::cout << "fetching image: " << filename << std::endl;
   return filename;
 }
 
@@ -174,7 +174,7 @@ std::string ShuffleImageSelector::getNextImage()
     std::string filename = pathTraverser->getImagePath(images.at(current_image_shuffle).toStdString());
     current_image_shuffle = current_image_shuffle + 1; // ignore and move to next image
   }
-  std::cout << "updating image: " << filename << std::endl;
+  std::cout << "fetching image: " << filename << std::endl;
   return filename;
 }
 
@@ -227,7 +227,7 @@ std::string SortedImageSelector::getNextImage()
     filename = pathTraverser->getImagePath(images.takeFirst().toStdString());
   }
 
-  std::cout << "updating image: " << filename << std::endl;
+  std::cout << "fetching image: " << filename << std::endl;
   return filename;
 }
 
