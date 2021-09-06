@@ -41,7 +41,7 @@ private:
     bool fitAspectAxisToWindow = false;
     QString overlayHexRGB;
 
-    Overlay* overlay;
+    Overlay* overlay = NULL;
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 
