@@ -8,6 +8,7 @@
 
 #include <QApplication>
 #include <QNetworkAccessManager>
+#include <QRegularExpression>
 #include <iostream>
 #include <sys/file.h>
 #include <errno.h>
@@ -22,17 +23,21 @@ void usage(std::string programName) {
     std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
 }
 
+QString overlayHexRGB = QString("#FFFFFF");
+QRegularExpression hexRGBMatcher("^#([0-9A-Fa-f]{3}){1,2}$");
+
 bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
   int opt;
   int debugInt = 0;
   int stretchInt = 0;
   static struct option long_options[] =
   {
-    {"verbose", no_argument,       &debugInt, 1},
-    {"stretch", no_argument,       &stretchInt, 1},
+    {"verbose",       no_argument,       &debugInt,   1},
+    {"stretch",       no_argument,       &stretchInt, 1},
+    {"overlay-color", required_argument, 0,           'h'},
   };
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:i:c:rsSv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:i:c:h:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 0:
           /* If this option set a flag, do nothing else now. */
@@ -84,6 +89,9 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
       case 'O':
         appConfig.overlay = optarg;
         break;
+      case 'h':
+        overlayHexRGB = QString::fromStdString(optarg);
+        break;
       case 'v':
         appConfig.debugMode = true;
         break;
@@ -123,8 +131,24 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
   {
       w.setBackgroundOpacity(appConfig.backgroundOpacity);
   }
-  std::unique_ptr<Overlay> o = std::unique_ptr<Overlay>(new Overlay(appConfig.overlay));
-  w.setOverlay(o);
+
+  if (!overlayHexRGB.isEmpty())
+  {
+    if(!hexRGBMatcher.match(overlayHexRGB).hasMatch())
+    {
+      std::cout << "Error: hex rgb string expected. e.g. #FFFFFF or #FFF" << std::endl;
+    }
+    else
+    {
+      w.setOverlayHexRGB(overlayHexRGB);
+    }
+  }
+
+  if (!appConfig.overlay.empty()) 
+  {
+    std::unique_ptr<Overlay> o = std::unique_ptr<Overlay>(new Overlay(appConfig.overlay));
+    w.setOverlay(o);
+  }
   w.setBaseOptions(appConfig.baseDisplayOptions);
 }
 
