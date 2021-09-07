@@ -139,7 +139,7 @@ void MainWindow::checkWindowSize()
     if (imageAspectMatchesMonitor)
     {
       bool isLandscape = screenSize.width() > screenSize.height();
-      ImageAspect newAspect = isLandscape ? ImageAspect_Landscape : ImageAspect_Portrait;
+      ImageAspectScreenFilter newAspect = isLandscape ? ImageAspectScreenFilter_Landscape : ImageAspectScreenFilter_Portrait;
       if (newAspect != baseImageOptions.onlyAspect)
       {
         Log("Changing image orientation to ", newAspect);
@@ -218,14 +218,6 @@ void MainWindow::updateImage(bool immediately)
       currentImage.width = p.width();
       currentImage.height = p.height();
       currentImage.rotation = 0;
-      if (currentImage.width > currentImage.height) {
-        currentImage.aspect = ImageAspect_Landscape;
-      } else if (currentImage.height > currentImage.width) {
-        currentImage.aspect = ImageAspect_Portrait;
-      } else {
-        currentImage.aspect = ImageAspect_Any;
-      }
-
     }
     else
     {
@@ -331,13 +323,13 @@ QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
   if (currentImage.options.fitAspectAxisToWindow)
   {
-    if (currentImage.aspect == ImageAspect_Portrait)
+    if (currentImage.aspect() == ImageAspect_Portrait)
     {
       // potrait mode, make height of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToHeight(height(), Qt::SmoothTransformation);
       return pTemp.copy(0,0,width(),height());
     }
-    else if (currentImage.aspect == ImageAspect_Landscape)
+    else if (currentImage.aspect() == ImageAspect_Landscape)
     {
       // landscape mode, make width of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToWidth(width(), Qt::SmoothTransformation);
@@ -410,10 +402,10 @@ void MainWindow::warn(std::string text)
 void MainWindow::setBaseOptions(const ImageDisplayOptions &baseOptionsIn) 
 { 
   baseImageOptions = baseOptionsIn; 
-  if(baseImageOptions.onlyAspect == ImageAspect_Monitor)
+  if(baseImageOptions.onlyAspect == ImageAspectScreenFilter_Monitor)
   {
     imageAspectMatchesMonitor = true;
-    baseImageOptions.onlyAspect = width() >= height() ? ImageAspect_Landscape : ImageAspect_Portrait;
+    baseImageOptions.onlyAspect = width() >= height() ? ImageAspectScreenFilter_Landscape : ImageAspectScreenFilter_Portrait;
   }
 }
 

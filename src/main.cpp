@@ -51,7 +51,7 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
         if (appConfig.valid_aspects.find(optarg[0]) == std::string::npos)
         {
           std::cout << "Invalid Aspect option, defaulting to all" << std::endl;
-          appConfig.baseDisplayOptions.onlyAspect = ImageAspect_Any;
+          appConfig.baseDisplayOptions.onlyAspect = ImageAspectScreenFilter_Any;
         }
         else
         {

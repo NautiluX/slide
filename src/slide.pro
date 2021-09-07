@@ -38,6 +38,7 @@ SOURCES += \
         overlay.cpp \
         imageselector.cpp \
         appconfig.cpp \
+        imagestructs.cpp \
         logger.cpp
 
 HEADERS += \

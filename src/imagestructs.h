@@ -6,7 +6,8 @@
 #include <string>
 
 // possible aspect ratios of an image
-enum ImageAspect { ImageAspect_Landscape = 0, ImageAspect_Portrait, ImageAspect_Any, ImageAspect_Monitor /* match monitors aspect */ };
+enum ImageAspect { ImageAspect_Landscape = 0, ImageAspect_Portrait};
+enum ImageAspectScreenFilter { ImageAspectScreenFilter_Landscape = 0, ImageAspectScreenFilter_Portrait, ImageAspectScreenFilter_Any, ImageAspectScreenFilter_Monitor /* match monitors aspect */ };
 
 struct DisplayTimeWindow
 {
@@ -22,18 +23,24 @@ struct DisplayTimeWindow
 // options to consider when displaying an image
 struct ImageDisplayOptions
 {
-    ImageAspect onlyAspect = ImageAspect_Any;
+    ImageAspectScreenFilter onlyAspect = ImageAspectScreenFilter_Any;
     bool fitAspectAxisToWindow = false;
     QVector<DisplayTimeWindow> timeWindows;
 };
 
 // details of a particular image
-struct ImageDetails
+class ImageDetails
 {
+public:
+    ImageDetails();
+    ~ImageDetails();
+    bool isValidForScreenAspect(const ImageAspectScreenFilter aspectDisplay) const;
+    ImageAspect aspect() const;
+
+public:
     int width = 0;
     int height = 0;
     int rotation = 0;
-    ImageAspect aspect = ImageAspect_Any;
     std::string filename;
     ImageDisplayOptions options;
 };

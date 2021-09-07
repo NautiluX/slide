@@ -14,21 +14,21 @@
 
 const std::string AppConfig::valid_aspects = "alpm"; // all, landscape, portait, monitor
 
-ImageAspect parseAspectFromString(char aspect) {
+ImageAspectScreenFilter parseAspectFromString(char aspect) {
   switch(aspect)
   {
     case 'l':
-      return ImageAspect_Landscape;
+      return ImageAspectScreenFilter_Landscape;
       break;
     case 'p':
-      return ImageAspect_Portrait;
+      return ImageAspectScreenFilter_Portrait;
       break;
     case 'm':
-      return ImageAspect_Monitor;
+      return ImageAspectScreenFilter_Monitor;
       break;
     default:
     case 'a':
-      return ImageAspect_Any;
+      return ImageAspectScreenFilter_Any;
       break;
   }
 }

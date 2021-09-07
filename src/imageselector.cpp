@@ -100,13 +100,6 @@ ImageDetails ImageSelector::populateImageDetails(const std::string&fileName, con
   imageDetails.width = imageWidth;
   imageDetails.height = imageHeight;
   imageDetails.rotation = degrees;
-  if (imageWidth > imageHeight) {
-    imageDetails.aspect = ImageAspect_Landscape;
-  } else if (imageHeight > imageWidth) {
-    imageDetails.aspect = ImageAspect_Portrait;
-  } else {
-    imageDetails.aspect = ImageAspect_Any;
-  }
 
   imageDetails.options = pathTraverser->UpdateOptionsForImage(imageDetails.filename, baseOptions);
   
@@ -161,8 +154,7 @@ bool ImageSelector::imageMatchesFilter(const ImageDetails& imageDetails)
 
 bool ImageSelector::imageValidForAspect(const ImageDetails& imageDetails)
 {
-  if (imageDetails.options.onlyAspect == ImageAspect_Any ||
-      imageDetails.aspect == imageDetails.options.onlyAspect)
+  if (imageDetails.isValidForScreenAspect(imageDetails.options.onlyAspect))
   {
     return true;
   }
