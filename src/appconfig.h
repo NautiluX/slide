@@ -56,6 +56,7 @@ struct AppConfig : public Config {
     AppConfig( const Config &inConfig ) : Config(inConfig) {}
     std::string configPath = "";
     std::string overlay = "";
+    QString overlayHexRGB = "#FFFFFF";
     QVector<PathEntry> paths;
 
     bool debugMode = false;

@@ -117,6 +117,15 @@ Config loadConfiguration(const std::string &configFilePath, const Config &curren
 }
 
 
+AppConfig loadConfiguration(const std::string &configFilePath, const AppConfig &currentConfig) {
+  AppConfig userConfig = currentConfig;
+  // make sure to only update the base members, preserve the ones from the copy above
+  (Config &)userConfig = loadConfiguration(configFilePath, (const Config &)userConfig);
+
+  return userConfig;
+}
+
+
 QString getAppConfigFilePath(const std::string &configPath) {
   std::string userConfigFolder = "~/.config/slide/";
   std::string systemConfigFolder = "/etc/slide";
@@ -217,7 +226,7 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
   }
 
   AppConfig loadedConfig = loadConfiguration(jsonFile.toStdString(), commandLineConfig);
-  
+
   QString val;
   QFile file;
   file.setFileName(jsonFile);

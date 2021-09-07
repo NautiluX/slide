@@ -23,9 +23,6 @@ void usage(std::string programName) {
     std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
 }
 
-QString overlayHexRGB = QString("#FFFFFF");
-QRegularExpression hexRGBMatcher("^#([0-9A-Fa-f]{3}){1,2}$");
-
 bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
   int opt;
   int debugInt = 0;
@@ -90,7 +87,7 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
         appConfig.overlay = optarg;
         break;
       case 'h':
-        overlayHexRGB = QString::fromStdString(optarg);
+        appConfig.overlayHexRGB = QString::fromStdString(optarg);
         break;
       case 'v':
         appConfig.debugMode = true;
@@ -132,15 +129,16 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
       w.setBackgroundOpacity(appConfig.backgroundOpacity);
   }
 
-  if (!overlayHexRGB.isEmpty())
+  if (!appConfig.overlayHexRGB.isEmpty())
   {
-    if(!hexRGBMatcher.match(overlayHexRGB).hasMatch())
+    QRegularExpression hexRGBMatcher("^#([0-9A-Fa-f]{3}){1,2}$");
+    if(!hexRGBMatcher.match(appConfig.overlayHexRGB).hasMatch())
     {
       std::cout << "Error: hex rgb string expected. e.g. #FFFFFF or #FFF" << std::endl;
     }
     else
     {
-      w.setOverlayHexRGB(overlayHexRGB);
+      w.setOverlayHexRGB(appConfig.overlayHexRGB);
     }
   }
 
