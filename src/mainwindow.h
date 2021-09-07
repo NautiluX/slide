@@ -34,6 +34,7 @@ public:
     const ImageDisplayOptions &getBaseOptions();
     void setImageSwitcher(ImageSwitcher *switcherIn);
     void setNetworkManager(QNetworkAccessManager *networkManagerIn);
+    void setOverlayHexRGB(QString overlayHexRGB);
 public slots:
     void checkWindowSize();
 private slots:
@@ -50,6 +51,7 @@ private:
     QNetworkAccessManager *networkManager = nullptr;
     QNetworkReply *pendingReply = nullptr;
     QSize lastScreenSize = {0,0};
+    QString overlayHexRGB = "#FFFF";
 
     std::unique_ptr<Overlay> overlay;
     ImageSwitcher *switcher = nullptr;
