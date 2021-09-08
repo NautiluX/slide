@@ -52,7 +52,6 @@ slide [-t rotation_seconds] [-T transition_seconds] [-h/--overlay-color overlay_
     * `<dir>`directory of the current image
     * `<path>`path to the current image without filename
   * Example: `slide -p ./images -O "20|60|Time: <time>;;;Picture taken at <exifdatetime>"`
-
 To exit the application, press escape. If you're using a touch display, touch all 4 corners at the same time.
 
 ## Configuration file
