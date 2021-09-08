@@ -28,6 +28,7 @@ public:
     void setImage(const ImageDetails &imageDetails);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
+    void setTransitionTime(unsigned int transitionSeconds);
     void warn(std::string text);
     void setOverlay(std::unique_ptr<Overlay> &overlay);
     void setBaseOptions(const ImageDisplayOptions &baseOptionsIn);
@@ -52,13 +53,14 @@ private:
     QNetworkReply *pendingReply = nullptr;
     QSize lastScreenSize = {0,0};
     QString overlayHexRGB = "#FFFF";
+    unsigned int transitionSeconds = 1;
 
     std::unique_ptr<Overlay> overlay;
     ImageSwitcher *switcher = nullptr;
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 
-    void updateImage(bool immediately);
+    void updateImage();
     int getImageRotation();
 
     QPixmap getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled);

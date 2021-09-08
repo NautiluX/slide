@@ -20,7 +20,7 @@
 #include <memory>
 
 void usage(std::string programName) {
-    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
+    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-T transition_seconds] [-h/--overlay-color #rrggbb] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-S] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
 }
 
 bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
@@ -34,7 +34,7 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
     {"overlay-color", required_argument, 0,           'h'},
   };
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:p:t:o:O:a:i:c:h:rsSv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:p:t:T:o:O:a:i:c:h:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 0:
           /* If this option set a flag, do nothing else now. */
@@ -60,6 +60,9 @@ bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
         break;
       case 't':
         appConfig.rotationSeconds = atoi(optarg);
+        break;
+      case 'T':
+	      appConfig.transitionTime =atoi(optarg);
         break;
       case 'b':
         appConfig.blurRadius = atoi(optarg);
@@ -128,6 +131,8 @@ void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
   {
       w.setBackgroundOpacity(appConfig.backgroundOpacity);
   }
+
+  w.setTransitionTime(appConfig.transitionTime);
 
   if (!appConfig.overlayHexRGB.isEmpty())
   {

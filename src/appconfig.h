@@ -9,6 +9,7 @@
 struct Config {
   public:
     unsigned int rotationSeconds = 30;
+    unsigned int transitionTime = 1;
     int blurRadius = -1;
     int backgroundOpacity = -1;
     ImageDisplayOptions baseDisplayOptions;
