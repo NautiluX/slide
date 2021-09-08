@@ -17,7 +17,7 @@ This project is maintained by myself during my spare time. If you like and use i
 ## Usage
 
 ```
-slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-O overlay_string] [-v] [--verbose] [--stretch]
+slide [-t rotation_seconds] [-T transition_seconds] [-c/--overlay-color overlay_color(#rrggbb)] [-a aspect] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-O overlay_string] [-v]  [-s] [-S] [--verbose] [--stretch]
 ```
 
 * `image_folder`: where to search for images (.jpg files)
@@ -25,6 +25,7 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
 * `-s` for shuffle instead of random image rotation
 * `-S` for sorted rotation (files ordered by name, first images then subfolders)
 * `rotation_seconds(default=30)`: time until next random image is chosen from the given folder
+* `transition_seconds(default=1)`: time of image transition animation. Default is 1 second, and transition animation will be disabled if the value is set to 0
 * `aspect(default=a)`: the required aspect ratio of the picture to display. Valid values are 'a' (all), 'l' (landscape) and 'p' (portrait)
 * `background_opacity(default=150)`: opacity of the background filling image between 0 (black background) and 255
 * `blur_radius(default=20)`: blur radius of the background filling image
@@ -45,7 +46,7 @@ slide [-t rotation_seconds] [-a aspect] [-o background_opacity(0..255)] [-b blur
     * `<dir>`directory of the current image
     * `<path>`path to the current image without filename
   * Example: `slide -p ./images -O "20|60|Time: <time>;;;Picture taken at <exifdatetime>"`
-      
+* `-c` or `--overlay-color` the color of the overlay text, in the form of 3 or 6 digits hex rgb string prefixed by `#`, for example `#00FF00` or `#0F0` for color 🟢
 To exit the application, press escape. If you're using a touch display, touch all 4 corners at the same time.
 
 ## Dependencies
