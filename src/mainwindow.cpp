@@ -299,8 +299,10 @@ void MainWindow::setOverlay(std::unique_ptr<Overlay> &o)
 QPixmap MainWindow::getBlurredBackground(const QPixmap& originalSize, const QPixmap& scaled)
 {
     if (currentImage.options.fitAspectAxisToWindow) {
-      // our scaled version will just fill the whole screen, us it directly
-      return scaled.copy();
+      // our scaled version will just fill the whole screen, use it directly
+      //Log("Using scaled image");
+      QRect rect((scaled.width() - width())/2, 0, width(), height());
+      return scaled.copy(rect);
     } else if (scaled.width() < width()) {
       QPixmap background = blur(originalSize.scaledToWidth(width(), Qt::SmoothTransformation));
       QRect rect(0, (background.height() - height())/2, width(), height());
@@ -324,18 +326,32 @@ QPixmap MainWindow::getScaledPixmap(const QPixmap& p)
 {
   if (currentImage.options.fitAspectAxisToWindow)
   {
-    if (currentImage.aspect() == ImageAspect_Portrait)
+    bool stretchWidth = currentImage.aspect() == ImageAspect_Landscape;
+    bool stretchHeight = currentImage.aspect() == ImageAspect_Portrait;
+    // check the stretched image will naturally fill the screen for its aspect ratio
+    if (stretchHeight && (width() > ((double)height()/p.height())*p.width()))
+    {
+      // stretched via height won't fill the width, so stretch the other way
+      stretchHeight = false;
+      stretchWidth = true;
+    }
+    else if (stretchWidth && (height() > ((double)width()/p.width())*p.height()))
+    {
+      // stretched via width won't fill the width, so stretch the other way
+      stretchWidth = false;
+      stretchHeight = true;
+    }
+
+    if (stretchHeight)
     {
       // potrait mode, make height of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToHeight(height(), Qt::SmoothTransformation);
       return pTemp.copy(0,0,width(),height());
     }
-    else if (currentImage.aspect() == ImageAspect_Landscape)
+    else if (stretchWidth)
     {
       // landscape mode, make width of image fit screen and crop top/bottom
       QPixmap pTemp = p.scaledToWidth(width(), Qt::SmoothTransformation);
-      //int imageTempWidth = pTemp.width();
-      //int imageTempHeight = pTemp.height();
       return pTemp.copy(0,0,width(),height());
     }
   }
