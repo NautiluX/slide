@@ -3,3 +3,4 @@ make
 .git
 build
 .vscode
+test_config/slide.options.json

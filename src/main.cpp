@@ -210,6 +210,11 @@ std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
 
 void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher)
 {  
+  if(appConfig.configPath.empty())
+  {
+    return;
+  }
+  
   QString jsonFile = getAppConfigFilePath(appConfig.configPath);
   QDir directory;
   if(!directory.exists(jsonFile))

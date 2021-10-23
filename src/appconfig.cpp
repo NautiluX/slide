@@ -49,6 +49,11 @@ void SetJSONBool(bool &value, QJsonObject jsonDoc, const char *key) {
 }
 
 Config loadConfiguration(const std::string &configFilePath, const Config &currentConfig) {
+  if(configFilePath.empty())
+  {
+    return currentConfig;
+  }
+
   QString jsonFile(configFilePath.c_str());
   QDir directory;
   if(!directory.exists(jsonFile))
@@ -130,7 +135,7 @@ QString getAppConfigFilePath(const std::string &configPath) {
   std::string userConfigFolder = "~/.config/slide/";
   std::string systemConfigFolder = "/etc/slide";
   QString baseConfigFilename("slide.options.json");
-  
+
   QDir directory(userConfigFolder.c_str());
   QString jsonFile = "";
   if (!configPath.empty())
@@ -218,6 +223,11 @@ QVector<PathEntry> parsePathEntry(QJsonObject &jsonMainDoc, bool baseRecursive, 
 }
 
 AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
+  if(commandLineConfig.configPath.empty())
+  {
+    return commandLineConfig;
+  }
+
   QString jsonFile = getAppConfigFilePath(commandLineConfig.configPath);
   QDir directory;
   if(!directory.exists(jsonFile))
@@ -272,6 +282,10 @@ AppConfig loadAppConfiguration(const AppConfig &commandLineConfig) {
 }
 
 Config getConfigurationForFolder(const std::string &folderPath, const Config &currentConfig) {
+  if(folderPath.empty())
+  {
+    return currentConfig;
+  }
   QDir directory(folderPath.c_str());
   QString jsonFile = directory.filePath(QString("options.json"));
   if(directory.exists(jsonFile))
