@@ -18,8 +18,6 @@
 #include <QGraphicsPixmapItem>
 #include <QApplication>
 #include <QScreen>
-#include <QNetworkReply>
-#include <sstream>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -162,27 +160,7 @@ void MainWindow::checkWindowSize()
 void MainWindow::setImage(const ImageDetails &imageDetails)
 {
     currentImage = imageDetails;
-    downloadedData.clear();
-    if (pendingReply)
-    {
-      pendingReply->abort();
-    }
     updateImage();
-}
-
-void MainWindow::fileDownloaded(QNetworkReply* netReply) 
-{
-  if (netReply == pendingReply)
-  {
-    pendingReply = nullptr;
-    QNetworkReply::NetworkError err = netReply->error();
-    if (err == QNetworkReply::NoError)
-    {
-      downloadedData = netReply->readAll();
-      netReply->deleteLater();
-      updateImage();
-    }
-  }
 }
 
 void MainWindow::updateImage()
@@ -190,17 +168,6 @@ void MainWindow::updateImage()
     checkWindowSize();
     if (currentImage.filename == "")
       return;
-
-    if (currentImage.filename.find("https://") != std::string::npos && downloadedData.isNull())
-    {
-      if (pendingReply == nullptr)
-      {
-        QNetworkRequest request(QUrl(currentImage.filename.c_str()));
-        pendingReply = networkManager->get(request);
-        connect( networkManager, SIGNAL (finished(QNetworkReply*)), this, SLOT (fileDownloaded(QNetworkReply*)));
-      }
-      return;
-    }
 
     QLabel *label = this->findChild<QLabel*>("image");
     const QPixmap* oldImage = label->pixmap();
@@ -212,18 +179,7 @@ void MainWindow::updateImage()
     }
 
     QPixmap p;
-    if (!downloadedData.isNull())
-    {
-      p.loadFromData(downloadedData);
-      // BUG BUG have the selector update this?
-      currentImage.width = p.width();
-      currentImage.height = p.height();
-      currentImage.rotation = 0;
-    }
-    else
-    {
-      p.load( currentImage.filename.c_str() );
-    }
+    p.load( currentImage.filename.c_str() );
 
     Log("size:", p.width(), "x", p.height(), "(window:", width(), ",", height(), ")");
 
@@ -439,9 +395,4 @@ void MainWindow::setImageSwitcher(ImageSwitcher *switcherIn)
 const ImageDisplayOptions &MainWindow::getBaseOptions() 
 {
    return baseImageOptions; 
-}
-
-void MainWindow::setNetworkManager(QNetworkAccessManager *networkManagerIn)
-{
-  networkManager = networkManagerIn;
 }

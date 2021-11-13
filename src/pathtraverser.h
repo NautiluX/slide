@@ -4,9 +4,6 @@
 #include <iostream>
 #include <QDir>
 #include <QStringList>
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
 #include "imageselector.h"
 
 static const QStringList supportedFormats={"jpg","jpeg","png","tif","tiff"};

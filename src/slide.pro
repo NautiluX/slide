@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network xml
+QT       += core gui
 CONFIG += qt 
 CONFIG += debug
 CONFIG += c++1z

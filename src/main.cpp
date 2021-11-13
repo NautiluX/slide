@@ -7,7 +7,6 @@
 #include "logger.h"
 
 #include <QApplication>
-#include <QNetworkAccessManager>
 #include <QRegularExpression>
 #include <iostream>
 #include <sys/file.h>
@@ -261,11 +260,8 @@ int main(int argc, char *argv[])
   Log( "Rotation Time: ", appConfig.rotationSeconds );
   Log( "Overlay input: ", appConfig.overlay );
   
-  QNetworkAccessManager webCtrl; 
-
   MainWindow w;
   ConfigureWindowFromSettings(w, appConfig);
-  w.setNetworkManager(&webCtrl);
   w.show();
 
   std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);

@@ -6,8 +6,6 @@
 #include <QDirIterator>
 #include <QDir>
 #include <QFileInfo>
-#include <QDomDocument>
-#include <QDomAttr>
 #include <iostream>
 #include <stdlib.h>     /* srand, rand */
 
