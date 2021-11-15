@@ -9,11 +9,11 @@
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 
-ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_ptr<ImageSelector>& selector):
+ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeoutMsec, std::unique_ptr<ImageSelector>& selector):
     QObject::QObject(),
     window(w),
-    timeout(timeout),
-    selector(selector),
+    timeout(timeoutMsec),
+    selector(std::move(selector)),
     timer(this),
     timerNoContent(this)
 {
@@ -21,15 +21,19 @@ ImageSwitcher::ImageSwitcher(MainWindow& w, unsigned int timeout, std::unique_pt
 
 void ImageSwitcher::updateImage()
 {
-    std::string filename(selector->getNextImage());
-    if (filename == "")
+    if(reloadConfigIfNeeded)
+    {
+      reloadConfigIfNeeded(window, this);
+    }
+    ImageDetails imageDetails = selector->getNextImage(window.getBaseOptions());
+    if (imageDetails.filename == "")
     {
       window.warn("No image found.");
       timerNoContent.start(timeoutNoContent);
     }
     else
     {
-      window.setImage(filename);
+      window.setImage(imageDetails);
       timerNoContent.stop(); // we have loaded content so stop the fast polling
     }
 }
@@ -40,4 +44,26 @@ void ImageSwitcher::start()
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateImage()));
     connect(&timerNoContent, SIGNAL(timeout()), this, SLOT(updateImage()));
     timer.start(timeout);
+}
+
+void ImageSwitcher::scheduleImageUpdate()
+{
+  // update our image in 100msec, to let the system settle
+  QTimer::singleShot(100, this, SLOT(updateImage())); 
+}
+
+void ImageSwitcher::setConfigFileReloader(std::function<void(MainWindow &w, ImageSwitcher *switcher)> reloadConfigIfNeededIn)
+{
+  reloadConfigIfNeeded = reloadConfigIfNeededIn;
+}
+
+void ImageSwitcher::setRotationTime(unsigned int timeoutMsecIn)
+{
+  timeout = timeoutMsecIn;
+  timer.start(timeout);
+}
+
+void ImageSwitcher::setImageSelector(std::unique_ptr<ImageSelector>& selectorIn)
+{
+  selector = std::move(selectorIn);
 }

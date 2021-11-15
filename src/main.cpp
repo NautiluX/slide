@@ -3,6 +3,9 @@
 #include "imageswitcher.h"
 #include "pathtraverser.h"
 #include "overlay.h"
+#include "appconfig.h"
+#include "logger.h"
+
 #include <QApplication>
 #include <QRegularExpression>
 #include <iostream>
@@ -16,162 +19,257 @@
 #include <memory>
 
 void usage(std::string programName) {
-    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-T transition_seconds] [-c/--overlay-color #rrggbb] [-a aspect('l','p','a')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-O overlay_string] [-s] [-S] [-v] [--verbose] [--stretch]" << std::endl;
+    std::cerr << "Usage: " << programName << " [-t rotation_seconds] [-T transition_seconds] [-h/--overlay-color #rrggbb] [-a aspect('l','p','a', 'm')] [-o background_opacity(0..255)] [-b blur_radius] -p image_folder [-r] [-s] [-S] [-v] [--verbose] [--stretch] [-c config_file_path]" << std::endl;
 }
 
-int main(int argc, char *argv[])
-{
-  unsigned int rotationSeconds = 30;
-  std::string path = "";
-
-  QApplication a(argc, argv);
-
-  MainWindow w;
+bool parseCommandLine(AppConfig &appConfig, int argc, char *argv[]) {
   int opt;
-  bool recursive = false;
-  bool shuffle = false;
-  bool sorted = false;
-  bool debugMode = false;
-  char aspect = 'a';
-  bool fitAspectAxisToWindow = false;
-  std::string valid_aspects = "alp"; // all, landscape, portait
-  std::string overlay = "";
-  QString overlayHexRGB = QString();
-  QRegularExpression hexRGBMatcher("^#([0-9A-Fa-f]{3}){1,2}$");
   int debugInt = 0;
   int stretchInt = 0;
   static struct option long_options[] =
   {
     {"verbose",       no_argument,       &debugInt,   1},
     {"stretch",       no_argument,       &stretchInt, 1},
-    {"overlay-color", required_argument, 0,           'c'},
+    {"overlay-color", required_argument, 0,           'h'},
   };
   int option_index = 0;
-  while ((opt = getopt_long(argc, argv, "b:p:t:T:o:O:c:a:rsSv", long_options, &option_index)) != -1) {
+  while ((opt = getopt_long(argc, argv, "b:p:t:T:o:O:a:i:c:h:rsSv", long_options, &option_index)) != -1) {
     switch (opt) {
       case 0:
           /* If this option set a flag, do nothing else now. */
           if (long_options[option_index].flag != 0)
             break;
-          usage(argv[0]);
-          return 1;
+          return false;
           break;
       case 'p':
-        path = optarg;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].path = optarg;
         break;
       case 'a':
-        aspect = optarg[0];
-        if ( valid_aspects.find(aspect) == std::string::npos )
+        if (appConfig.valid_aspects.find(optarg[0]) == std::string::npos)
         {
           std::cout << "Invalid Aspect option, defaulting to all" << std::endl;
-          aspect = 'a';
+          appConfig.baseDisplayOptions.onlyAspect = ImageAspectScreenFilter_Any;
+        }
+        else
+        {
+          appConfig.baseDisplayOptions.onlyAspect = parseAspectFromString(optarg[0]);
         }
         break;
       case 't':
-        rotationSeconds = atoi(optarg);
+        appConfig.rotationSeconds = atoi(optarg);
         break;
       case 'T':
-	  w.setTransitionTime(atoi(optarg));
+	      appConfig.transitionTime =atoi(optarg);
         break;
       case 'b':
-        w.setBlurRadius(atoi(optarg));
+        appConfig.blurRadius = atoi(optarg);
         break;
       case 'o':
-        w.setBackgroundOpacity(atoi(optarg));
+        appConfig.backgroundOpacity = atoi(optarg);
         break;
       case 'r':
-        recursive = true;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].recursive = true;
         break;
       case 's':
-        shuffle = true;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].shuffle = true;
         std::cout << "Shuffle mode is on." << std::endl;
         break;
       case 'S':
-        sorted = true;
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].sorted = true;
         break;
       case 'O':
-        overlay = optarg;
+        appConfig.overlay = optarg;
         break;
-      case 'c':
-        overlayHexRGB = QString::fromStdString(optarg);
+      case 'h':
+        appConfig.overlayHexRGB = QString::fromStdString(optarg);
         break;
       case 'v':
-        debugMode = true;
+        appConfig.debugMode = true;
+        break;
+      case 'i':
+        if(appConfig.paths.count() == 0)
+          appConfig.paths.append(PathEntry());
+        appConfig.paths[0].imageList = optarg;
+        break;
+      case 'c':
+        appConfig.configPath = optarg;
         break;
       default: /* '?' */
-        usage(argv[0]);
-        return 1;
+        return false;
     }
   }
+  
   if(debugInt==1)
   {
-    debugMode = true;
+    appConfig.debugMode = true;
   }
   if(stretchInt==1)
   {
-    fitAspectAxisToWindow = true;
+    appConfig.baseDisplayOptions.fitAspectAxisToWindow = true;
   }
 
-  if (path.empty())
+  return true;
+}
+
+void ConfigureWindowFromSettings(MainWindow &w, const AppConfig &appConfig)
+{
+  if (appConfig.blurRadius>= 0)
+  {
+    w.setBlurRadius(appConfig.blurRadius);
+  }
+
+  if (appConfig.backgroundOpacity>= 0)
+  {
+      w.setBackgroundOpacity(appConfig.backgroundOpacity);
+  }
+
+  w.setTransitionTime(appConfig.transitionTime);
+
+  if (!appConfig.overlayHexRGB.isEmpty())
+  {
+    QRegularExpression hexRGBMatcher("^#([0-9A-Fa-f]{3}){1,2}$");
+    if(!hexRGBMatcher.match(appConfig.overlayHexRGB).hasMatch())
+    {
+      std::cout << "Error: hex rgb string expected. e.g. #FFFFFF or #FFF" << std::endl;
+    }
+    else
+    {
+      w.setOverlayHexRGB(appConfig.overlayHexRGB);
+    }
+  }
+
+  if (!appConfig.overlay.empty()) 
+  {
+    std::unique_ptr<Overlay> o = std::unique_ptr<Overlay>(new Overlay(appConfig.overlay));
+    w.setOverlay(o);
+  }
+  w.setBaseOptions(appConfig.baseDisplayOptions);
+}
+
+std::unique_ptr<ImageSelector> GetSelectorForConfig(const PathEntry& path)
+{
+  std::unique_ptr<PathTraverser> pathTraverser;
+  if (!path.imageList.empty())
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new ImageListPathTraverser(path.imageList));
+  }
+  else if (path.recursive)
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path.path));
+  }
+  else
+  {
+    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path.path));
+  }
+
+  std::unique_ptr<ImageSelector> selector;
+  if (path.sorted)
+  {
+    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser));
+  }
+  else if (path.shuffle)
+  {
+    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser));
+  }
+  else
+  {
+    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser));
+  }
+
+  return selector;
+}
+
+std::unique_ptr<ImageSelector> GetSelectorForApp(const AppConfig& appConfig)
+{
+  if(appConfig.paths.count()==1)
+  {
+    return GetSelectorForConfig(appConfig.paths[0]);
+  }
+  else
+  {
+    std::unique_ptr<ListImageSelector> listSelector(new ListImageSelector());
+    for(const auto &path : appConfig.paths)
+    {
+      auto selector = GetSelectorForConfig(path);
+      listSelector->AddImageSelector(selector, path.exclusive, path.baseDisplayOptions);
+    }
+    // new things
+    return listSelector;
+  }
+}
+
+
+void ReloadConfigIfNeeded(AppConfig &appConfig, MainWindow &w, ImageSwitcher *switcher)
+{  
+  if(appConfig.configPath.empty())
+  {
+    return;
+  }
+  
+  QString jsonFile = getAppConfigFilePath(appConfig.configPath);
+  QDir directory;
+  if(!directory.exists(jsonFile))
+  {
+    return;
+  }
+
+  if(appConfig.loadTime <  QFileInfo(jsonFile).lastModified())
+  {
+    AppConfig oldConfig = appConfig;
+    appConfig = loadAppConfiguration(appConfig);
+
+    ConfigureWindowFromSettings(w, appConfig);
+    if(appConfig.PathOptionsChanged(oldConfig))
+    {
+      std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
+      switcher->setImageSelector(selector);
+    }
+
+    switcher->setRotationTime(appConfig.rotationSeconds * 1000);
+  }
+}
+
+int main(int argc, char *argv[])
+{
+  QApplication a(argc, argv);
+
+  AppConfig commandLineAppConfig;
+  if (!parseCommandLine(commandLineAppConfig, argc, argv))
+  {
+    usage(argv[0]);
+    return 1;
+  }
+
+  AppConfig appConfig = loadAppConfiguration(commandLineAppConfig);
+
+  if (appConfig.paths.empty())
   {
     std::cout << "Error: Path expected." << std::endl;
     usage(argv[0]);
     return 1;
   }
-
-  if (!overlayHexRGB.isEmpty())
-  {
-    if(!hexRGBMatcher.match(overlayHexRGB).hasMatch())
-    {
-      std::cout << "Error: hex rgb string expected. e.g. #FFFFFF or #FFF" << std::endl;
-      return 1;
-    }
-    w.setOverlayHexRGB(overlayHexRGB);
-  }
-
-  std::unique_ptr<PathTraverser> pathTraverser;
-  if (recursive)
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new RecursivePathTraverser(path));
-  }
-  else
-  {
-    pathTraverser = std::unique_ptr<PathTraverser>(new DefaultPathTraverser(path));
-  }
-
-  std::unique_ptr<ImageSelector> selector;
-  if (sorted)
-  {
-    selector = std::unique_ptr<ImageSelector>(new SortedImageSelector(pathTraverser, aspect));
-  }
-  else if (shuffle)
-  {
-    selector = std::unique_ptr<ImageSelector>(new ShuffleImageSelector(pathTraverser, aspect));
-  }
-  else
-  {
-    selector = std::unique_ptr<ImageSelector>(new RandomImageSelector(pathTraverser, aspect));
-  }
-  selector->setDebugMode(debugMode);
-  if(debugMode)
-  {
-    std::cout << "Rotation Time: " << rotationSeconds << std::endl;
-    std::cout << "Overlay input: " << overlay << std::endl;
-  }
-
-  Overlay o(overlay);
-  o.setDebugMode(debugMode);
-  if (!overlay.empty())
-  {
-    w.setOverlay(&o);
-  }
-
-  w.setAspect(aspect);
-  w.setDebugMode(debugMode);
-  w.setFitAspectAxisToWindow(fitAspectAxisToWindow);
+  SetupLogger(appConfig.debugMode);
+  Log( "Rotation Time: ", appConfig.rotationSeconds );
+  Log( "Overlay input: ", appConfig.overlay );
+  
+  MainWindow w;
+  ConfigureWindowFromSettings(w, appConfig);
   w.show();
 
-  ImageSwitcher switcher(w, rotationSeconds * 1000, selector);
+  std::unique_ptr<ImageSelector> selector = GetSelectorForApp(appConfig);
+  
+  ImageSwitcher switcher(w, appConfig.rotationSeconds * 1000, selector);
+  w.setImageSwitcher(&switcher);
+  std::function<void(MainWindow &w, ImageSwitcher *switcher)> reloader = [&appConfig](MainWindow &w, ImageSwitcher *switcher) { ReloadConfigIfNeeded(appConfig, w, switcher); };
+  switcher.setConfigFileReloader(reloader);
   switcher.start();
   return a.exec();
 }

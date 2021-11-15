@@ -4,6 +4,7 @@
 #include <iostream>
 #include <QDir>
 #include <QStringList>
+#include "imageselector.h"
 
 static const QStringList supportedFormats={"jpg","jpeg","png","tif","tiff"};
 
@@ -15,10 +16,12 @@ class PathTraverser
     virtual ~PathTraverser();
     virtual QStringList getImages() const = 0;
     virtual const std::string getImagePath(const std::string image) const = 0;
+    virtual ImageDisplayOptions UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const = 0;
 
   protected:
     const std::string path;
     QStringList getImageFormats() const;
+    ImageDisplayOptions LoadOptionsForDirectory(const std::string &directoryPath, const ImageDisplayOptions &baseOptions) const;
 };
 
 class RecursivePathTraverser : public PathTraverser
@@ -28,6 +31,7 @@ class RecursivePathTraverser : public PathTraverser
     virtual ~RecursivePathTraverser();
     QStringList getImages() const;
     virtual const std::string getImagePath(const std::string image) const;
+    virtual ImageDisplayOptions UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const;
 };
 
 class DefaultPathTraverser : public PathTraverser
@@ -37,8 +41,20 @@ class DefaultPathTraverser : public PathTraverser
     virtual ~DefaultPathTraverser();
     QStringList getImages() const;
     virtual const std::string getImagePath(const std::string image) const;
+    virtual ImageDisplayOptions UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& baseOptions) const;
   private:
     QDir directory;
 };
 
+class ImageListPathTraverser : public PathTraverser
+{
+  public:
+    ImageListPathTraverser(const std::string &imageListString);
+    virtual ~ImageListPathTraverser();
+    QStringList getImages() const;
+    virtual const std::string getImagePath(const std::string image) const;
+    virtual ImageDisplayOptions UpdateOptionsForImage(const std::string& filename, const ImageDisplayOptions& options) const;
+  private:
+    QStringList imageList;
+};
 #endif // PATHTRAVERSER_H

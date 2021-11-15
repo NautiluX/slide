@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QPixmap>
+#include "imagestructs.h"
+#include "imageselector.h"
 
 namespace Ui {
 class MainWindow;
@@ -10,6 +12,7 @@ class MainWindow;
 class QLabel;
 class QKeyEvent;
 class Overlay;
+class ImageSwitcher;
 
 class MainWindow : public QMainWindow
 {
@@ -21,29 +24,32 @@ public:
     bool event(QEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     ~MainWindow();
-    void setImage(std::string path);
+    void setImage(const ImageDetails &imageDetails);
     void setBlurRadius(unsigned int blurRadius);
     void setBackgroundOpacity(unsigned int opacity);
     void setTransitionTime(unsigned int transitionSeconds);
     void warn(std::string text);
-    void setOverlay(Overlay* overlay);
-    void setAspect(char aspectIn);
-    void setDebugMode(bool debugModeIn) {debugMode = debugModeIn;}
-    void setFitAspectAxisToWindow(bool fitAspectAxisToWindowIn) { fitAspectAxisToWindow = fitAspectAxisToWindowIn; }
+    void setOverlay(std::unique_ptr<Overlay> &overlay);
+    void setBaseOptions(const ImageDisplayOptions &baseOptionsIn);
+    const ImageDisplayOptions &getBaseOptions();
+    void setImageSwitcher(ImageSwitcher *switcherIn);
     void setOverlayHexRGB(QString overlayHexRGB);
+public slots:
+    void checkWindowSize();
 private:
     Ui::MainWindow *ui;
 
-    std::string currentImage;
     unsigned int blurRadius = 20;
     unsigned int backgroundOpacity = 150;
+    ImageDisplayOptions baseImageOptions;
+    bool imageAspectMatchesMonitor = false;
+    ImageDetails currentImage;
+    QSize lastScreenSize = {0,0};
+    QString overlayHexRGB = "#FFFF";
     unsigned int transitionSeconds = 1;
-    char aspect = 'a';
-    bool debugMode = false;
-    bool fitAspectAxisToWindow = false;
-    QString overlayHexRGB;
 
-    Overlay* overlay = NULL;
+    std::unique_ptr<Overlay> overlay;
+    ImageSwitcher *switcher = nullptr;
 
     void drawText(QPixmap& image, int margin, int fontsize, QString text, int alignment);
 
