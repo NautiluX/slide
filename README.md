@@ -111,7 +111,7 @@ Supported keys and values in the JSON configuration are:
 * `overlay` : the same as the overlay command line argument
 * `shuffle` : set to true to enable shuffle mode for file display
 * `recursive` : set to true to enable recursive mode for file display
-* `sorted` : set to true to enable shuffle mode for file display
+* `sorted` : set to true to enable sorted mode for file display
 * `stretch` : set to true to enable, the same as the `--stretch` command line argument
 * `rotationSeconds` : the same as the `-t` command line argument
 * `opacity` : the same as the command line `-o` argument
